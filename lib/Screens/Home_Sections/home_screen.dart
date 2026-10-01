@@ -13,7 +13,12 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback? onMenuTap;
   final VoidCallback? onMyChitsTap;
   final VoidCallback? onPaymentTap;
-  const HomeScreen({super.key, this.onMenuTap, this.onMyChitsTap, this.onPaymentTap});
+  const HomeScreen({
+    super.key,
+    this.onMenuTap,
+    this.onMyChitsTap,
+    this.onPaymentTap,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -50,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
         surfaceTintColor: Colors.transparent,
         backgroundColor: Color(0xFFF3F3F5),
         elevation: 0,
+        titleSpacing: 0,
         leading: IconButton(
           icon: Icon(Icons.menu, color: Colors.black, size: 24.w),
           onPressed: widget.onMenuTap ?? () {},
@@ -58,8 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
           _userName,
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
@@ -98,7 +104,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
               );
             },
             child: Image.asset(
@@ -113,779 +121,768 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Banner
-            Image.asset(
-              'assets/home_images/home_banner.png',
-              width: double.infinity,
-              height: 150.h,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 150.h,
-                color: primaryColor.withOpacity(0.2),
-                child: const Center(
-                  child: Text('assets/home_images/home_banner.png missing'),
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            // Dot Indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 8.w,
-                  height: 8.w,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                Container(
-                  width: 8.w,
-                  height: 8.w,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                Container(
-                  width: 8.w,
-                  height: 8.w,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                Container(
-                  width: 24.w,
-                  height: 8.w,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-
-            // Horizontal Cards (My Chit, Available Chits, Chit Scheme)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 14.w),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildCategoryCard(
-                      'My Chit',
-                      'Chit Overview',
-                      const [Color(0xFFFFFFFF), Color(0xFF43D389)],
-                      'assets/home_images/book.png',
-                      onTap: widget.onMyChitsTap,
+                // Banner
+                Image.asset(
+                  'assets/home_images/home_banner.png',
+                  width: double.infinity,
+                  height: 150.h,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 150.h,
+                    color: primaryColor.withOpacity(0.2),
+                    child: const Center(
+                      child: Text('assets/home_images/home_banner.png missing'),
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: _buildCategoryCard(
-                      'Available Chits',
-                      'View available chit plans',
-                      const [Color(0xFFFFFFFF), Color(0xFFE9C958)],
-                      'assets/home_images/calender.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ChitSchemaScreen(initialTab: 1),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: _buildCategoryCard(
-                      'Chit Scheme',
-                      'Explore available chit plans',
-                      const [Color(0xFFFFFFFF), Color(0xFFD23D51)],
-                      'assets/home_images/group.png',
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const ChitSchemaScreen(initialTab: 0),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20.h),
-
-            // Payment Due Card
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: Color(0xFFD7D7D7)),
                 ),
-                padding: EdgeInsets.all(14.w),
-                child: Column(
+                SizedBox(height: 12.h),
+                // Dot Indicator
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Container(
+                      width: 8.w,
+                      height: 8.w,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Container(
+                      width: 8.w,
+                      height: 8.w,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Container(
+                      width: 8.w,
+                      height: 8.w,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: 4.w),
+                    Container(
+                      width: 24.w,
+                      height: 8.w,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryColor,
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+
+                // Horizontal Cards (My Chit, Available Chits, Chit Scheme)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 14.w),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildCategoryCard(
+                          'My Chit',
+                          'Chit Overview',
+                          const [Color(0xFFFFFFFF), Color(0xFF43D389)],
+                          'assets/home_images/book.png',
+                          onTap: widget.onMyChitsTap,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: _buildCategoryCard(
+                          'Available Chits',
+                          'View available chit plans',
+                          const [Color(0xFFFFFFFF), Color(0xFFE9C958)],
+                          'assets/home_images/calender.png',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ChitSchemaScreen(initialTab: 1),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: _buildCategoryCard(
+                          'Chit Scheme',
+                          'Explore available chit plans',
+                          const [Color(0xFFFFFFFF), Color(0xFFD23D51)],
+                          'assets/home_images/group.png',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ChitSchemaScreen(initialTab: 0),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20.h),
+
+                // Payment Due Card
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(color: Color(0xFFD7D7D7)),
+                    ),
+                    padding: EdgeInsets.all(14.w),
+                    child: Column(
                       children: [
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            CircleAvatar(
-                              radius: 12.r,
-                              backgroundColor: primaryColor,
-                              child: Icon(
-                                Icons.currency_rupee,
-                                color: Colors.white,
-                                size: 15.w,
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            Row(
                               children: [
-                                Row(
+                                CircleAvatar(
+                                  radius: 12.r,
+                                  backgroundColor: primaryColor,
+                                  child: Icon(
+                                    Icons.currency_rupee,
+                                    color: Colors.white,
+                                    size: 15.w,
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      'Payment Due',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16.sp,
-                                        color: primaryColor,
-                                      ),
-                                    ),
-                                    SizedBox(width: 90.w),
-                                    GestureDetector(
-                                      onTap: () {},
-                                      child: Text(
-                                        'View Details >',
-                                        style: TextStyle(
-                                          color: primaryColor,
-                                          fontSize: 12.sp,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Payment Due',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16.sp,
+                                            color: primaryColor,
+                                          ),
                                         ),
+                                        SizedBox(width: 90.w),
+                                        GestureDetector(
+                                          onTap: () {},
+                                          child: Text(
+                                            'View Details >',
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                              fontSize: 12.sp,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 3.h),
+                                    Text(
+                                      'You have 1 pending payment',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 12.sp,
                                       ),
                                     ),
                                   ],
-                                ),
-                                SizedBox(height: 3.h),
-                                Text(
-                                  'You have 1 pending payment',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12.sp,
-                                  ),
                                 ),
                               ],
                             ),
                           ],
                         ),
+                        SizedBox(
+                          height: 180.h,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                SizedBox(height: 10.h),
+                                _buildPaymentItem(
+                                  'SSC001',
+                                  '25 July 2025',
+                                  '5,000',
+                                ),
+                                SizedBox(height: 10.h),
+                                _buildPaymentItem(
+                                  'SSC002',
+                                  '25 June 2025',
+                                  '5,000',
+                                ),
+                                SizedBox(height: 10.h),
+                                _buildPaymentItem(
+                                  'SSC003',
+                                  '25 May 2025',
+                                  '5,000',
+                                ),
+                                SizedBox(height: 10.h),
+                                _buildPaymentItem(
+                                  'SSC004',
+                                  '25 Apr 2025',
+                                  '5,000',
+                                ),
+                                SizedBox(height: 10.h),
+                                _buildPaymentItem(
+                                  'SSC005',
+                                  '25 Mar 2025',
+                                  '5,000',
+                                ),
+                                SizedBox(height: 10.h),
+                                _buildPaymentItem(
+                                  'SSC006',
+                                  '25 Feb 2025',
+                                  '5,000',
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    Divider(
-                      height: 24.h,
-                      color: Color(0xFFD7D7D7),
-                      thickness: 0.5,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                // Payment Assistance Card
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Color(0xFFFAFAFA),
+                      border: Border.all(color: Color(0xFFEEEAEA), width: 0.8),
+                      borderRadius: BorderRadius.circular(12.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0x14000000), // #00000014
+                          offset: const Offset(0, 8),
+                          blurRadius: 16,
+                          spreadRadius: 0,
+                        ),
+                        BoxShadow(
+                          color: const Color(0x0A000000), // #0000000A
+                          offset: const Offset(0, 0),
+                          blurRadius: 4,
+                          spreadRadius: 0,
+                        ),
+                      ],
                     ),
-                    Row(
+                    padding: EdgeInsets.all(16.w),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Due Date',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12.sp,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '25 May 2025',
-                              style: TextStyle(
-                                color: Color(0xFFDB1111),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Amount',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12.sp,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              '5,000',
+                              'Payment Assistance',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16.sp,
+                              ),
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              'Need help paying your due?\nContact your agent.',
+                              style: TextStyle(
+                                color: Color(0xFF767676),
+                                fontSize: 12.sp,
                               ),
                             ),
                           ],
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            if (widget.onPaymentTap != null) {
-                              widget.onPaymentTap!();
-                            }
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) =>
+                                  _buildNeedHelpBottomSheet(context),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFFD40909),
+                            backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                           ),
                           child: Text(
-                            'Pay Now',
+                            'Call Now',
                             style: TextStyle(
-                              fontSize: 12.sp,
+                              fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 16.h),
+                SizedBox(height: 24.h),
 
-            // Payment Assistance Card
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFFFAFAFA),
-                  border: Border.all(color: Color(0xFFEEEAEA), width: 0.8),
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0x14000000), // #00000014
-                      offset: const Offset(0, 8),
-                      blurRadius: 16,
-                      spreadRadius: 0,
-                    ),
-                    BoxShadow(
-                      color: const Color(0x0A000000), // #0000000A
-                      offset: const Offset(0, 0),
-                      blurRadius: 4,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                padding: EdgeInsets.all(16.w),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Payment Assistance',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16.sp,
+                // Plan Your Growth Section
+                Container(
+                  color: primaryColor,
+                  padding: EdgeInsets.only(
+                    left: 16.w,
+                    right: 16.w,
+                    top: 16.h,
+                    bottom: 20.h,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Let\'s Plan Your Growth',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          'Need help paying your due?\nContact your agent.',
-                          style: TextStyle(
-                            color: Color(0xFF767676),
-                            fontSize: 12.sp,
+                        ],
+                      ),
+                      SizedBox(height: 14.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle_outlined,
+                            color: Colors.white,
+                            size: 15.w,
                           ),
-                        ),
-                      ],
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (context) =>
-                              _buildNeedHelpBottomSheet(context),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
+                          SizedBox(width: 6.w),
+                          Text(
+                            'Smart Savings Scheme',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          Icon(
+                            Icons.circle,
+                            color: Color(0xFFE2E2E2),
+                            size: 15.w,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            'Quick Cash',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.circle,
+                            color: Color(0xFFE2E2E2),
+                            size: 15.w,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            'Flexi Cash',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.5),
+                              fontSize: 13.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 16.h),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20.r),
                         ),
-                      ),
-                      child: Text(
-                        'Call Now',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 24.h),
-
-            // Plan Your Growth Section
-            Container(
-              color: primaryColor,
-              padding: EdgeInsets.only(
-                left: 16.w,
-                right: 16.w,
-                top: 16.h,
-                bottom: 20.h,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Let\'s Plan Your Growth',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 14.h),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.radio_button_checked,
-                        color: Colors.white,
-                        size: 18.w,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Smart Savings Scheme',
-                        style: TextStyle(color: Colors.white, fontSize: 13.sp),
-                      ),
-                      SizedBox(width: 16.w),
-                      Icon(
-                        Icons.radio_button_off,
-                        color: Colors.white.withOpacity(0.5),
-                        size: 18.w,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Quick Cash',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
-                          fontSize: 13.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10.h),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.radio_button_off,
-                        color: Colors.white.withOpacity(0.5),
-                        size: 18.w,
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        'Flexi Cash',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
-                          fontSize: 13.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 16.h),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    padding: EdgeInsets.all(16.w),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          right: 0,
-                          bottom: 20,
-                          child: Opacity(
-                            opacity: 0.1,
-                            child: Image.asset(
-                              'assets/home_images/ssc_pot.png',
-                              height: 120.h,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const SizedBox(),
-                            ),
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        padding: EdgeInsets.all(16.w),
+                        child: Stack(
                           children: [
-                            Text(
-                              'Investment Amount ₹',
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Container(
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.r),
-                                border: Border.all(
-                                  color: Colors.grey.withOpacity(0.3),
-                                ),
-                              ),
-                              child: TextField(
-                                style: TextStyle(fontSize: 13.sp),
-                                decoration: InputDecoration(
-                                  hintText: 'ex: 1,00,000',
-                                  hintStyle: TextStyle(color: Colors.grey[400]),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12.w,
-                                    vertical: 10.h,
-                                  ),
+                            Positioned(
+                              right: 0,
+                              bottom: 20,
+                              child: Opacity(
+                                opacity: 0.1,
+                                child: Image.asset(
+                                  'assets/home_images/ssc_pot.png',
+                                  height: 120.h,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const SizedBox(),
                                 ),
                               ),
                             ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'Enter values in multiples of Lakhs (min-1 Lakh to max-1 Crore)',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(height: 10.h),
-                            Center(
-                              child: Text(
-                                'Or',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 13.sp,
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 10.h),
-                            Text(
-                              'EMI Amount ₹',
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontSize: 13.sp,
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Container(
-                              height: 40.h,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.r),
-                                border: Border.all(
-                                  color: Colors.grey.withOpacity(0.3),
-                                ),
-                              ),
-                              child: TextField(
-                                style: TextStyle(fontSize: 13.sp),
-                                decoration: InputDecoration(
-                                  hintText: 'ex: 1,00,000',
-                                  hintStyle: TextStyle(color: Colors.grey[400]),
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12.w,
-                                    vertical: 10.h,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'Enter values in multiples of 5000 (min-5000 to max-5Lakhs)',
-                              style: TextStyle(
-                                fontSize: 10.sp,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            SizedBox(height: 16.h),
-                            Row(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'No Of EMI\'s',
-                                        style: TextStyle(
-                                          color: primaryColor,
-                                          fontSize: 11.sp,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4.h),
-                                      Container(
-                                        height: 38.h,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            8.r,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey.withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<String>(
-                                            isExpanded: true,
-                                            value: '20',
-                                            icon: Icon(
-                                              Icons.keyboard_arrow_down,
-                                              size: 20.w,
-                                              color: Colors.grey,
-                                            ),
-                                            items: ['20', '30', '40'].map((
-                                              String value,
-                                            ) {
-                                              return DropdownMenuItem<String>(
-                                                value: value,
-                                                child: Text(
-                                                  value,
-                                                  style: TextStyle(
-                                                    fontSize: 13.sp,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                            onChanged: (_) {},
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                Text(
+                                  'Investment Amount ₹',
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontSize: 13.sp,
                                   ),
                                 ),
-                                SizedBox(width: 12.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'No Of Chit Members',
-                                        style: TextStyle(
-                                          color: primaryColor,
-                                          fontSize: 11.sp,
-                                        ),
+                                SizedBox(height: 4.h),
+                                Container(
+                                  height: 40.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    border: Border.all(
+                                      color: Colors.grey.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    style: TextStyle(fontSize: 13.sp),
+                                    decoration: InputDecoration(
+                                      hintText: 'ex: 1,00,000',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey[400],
                                       ),
-                                      SizedBox(height: 4.h),
-                                      Container(
-                                        height: 38.h,
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 10.w,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            8.r,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.grey.withOpacity(0.3),
-                                          ),
-                                        ),
-                                        child: DropdownButtonHideUnderline(
-                                          child: DropdownButton<String>(
-                                            isExpanded: true,
-                                            value: '20',
-                                            icon: Icon(
-                                              Icons.keyboard_arrow_down,
-                                              size: 20.w,
-                                              color: Colors.grey,
-                                            ),
-                                            items: ['20', '30', '40'].map((
-                                              String value,
-                                            ) {
-                                              return DropdownMenuItem<String>(
-                                                value: value,
-                                                child: Text(
-                                                  value,
-                                                  style: TextStyle(
-                                                    fontSize: 13.sp,
-                                                    color: Colors.grey[600],
-                                                  ),
-                                                ),
-                                              );
-                                            }).toList(),
-                                            onChanged: (_) {},
-                                          ),
-                                        ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 10.h,
                                       ),
-                                    ],
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                            SizedBox(height: 16.h),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Expanded(
+                                SizedBox(height: 4.h),
+                                Text(
+                                  'Enter values in multiples of Lakhs (min-1 Lakh to max-1 Crore)',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                SizedBox(height: 10.h),
+                                Center(
                                   child: Text(
-                                    'Note:\nEnter Values In Multiples Of\nLakhs In Investment.',
+                                    'Or',
                                     style: TextStyle(
-                                      fontSize: 12.sp,
-                                      color: Color(0xFF8E8E8E),
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 13.sp,
                                     ),
                                   ),
                                 ),
-                                SizedBox(
-                                  width: 120.w,
-                                  height: 35.h,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const ChitSchemaScreen(initialTab: 0),
-                                        ),
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: primaryColor,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          20.r,
-                                        ),
-                                      ),
-                                      padding: EdgeInsets.zero,
-                                    ),
-                                    child: Text(
-                                      'Submit',
-                                      style: TextStyle(fontSize: 14.sp),
+                                SizedBox(height: 10.h),
+                                Text(
+                                  'EMI Amount ₹',
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontSize: 13.sp,
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Container(
+                                  height: 40.h,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    border: Border.all(
+                                      color: Colors.grey.withOpacity(0.3),
                                     ),
                                   ),
+                                  child: TextField(
+                                    style: TextStyle(fontSize: 13.sp),
+                                    decoration: InputDecoration(
+                                      hintText: 'ex: 1,00,000',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey[400],
+                                      ),
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12.w,
+                                        vertical: 10.h,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  'Enter values in multiples of 5000 (min-5000 to max-5Lakhs)',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                SizedBox(height: 16.h),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'No Of EMI\'s',
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                              fontSize: 11.sp,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Container(
+                                            height: 38.h,
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10.w,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8.r),
+                                              border: Border.all(
+                                                color: Colors.grey.withOpacity(
+                                                  0.3,
+                                                ),
+                                              ),
+                                            ),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<String>(
+                                                isExpanded: true,
+                                                value: '20',
+                                                icon: Icon(
+                                                  Icons.keyboard_arrow_down,
+                                                  size: 20.w,
+                                                  color: Colors.grey,
+                                                ),
+                                                items: ['20', '30', '40'].map((
+                                                  String value,
+                                                ) {
+                                                  return DropdownMenuItem<
+                                                    String
+                                                  >(
+                                                    value: value,
+                                                    child: Text(
+                                                      value,
+                                                      style: TextStyle(
+                                                        fontSize: 13.sp,
+                                                        color: Colors.grey[600],
+                                                      ),
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                                onChanged: (_) {},
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'No Of Chit Members',
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                              fontSize: 11.sp,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4.h),
+                                          Container(
+                                            height: 38.h,
+                                            padding: EdgeInsets.symmetric(
+                                              horizontal: 10.w,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8.r),
+                                              border: Border.all(
+                                                color: Colors.grey.withOpacity(
+                                                  0.3,
+                                                ),
+                                              ),
+                                            ),
+                                            child: DropdownButtonHideUnderline(
+                                              child: DropdownButton<String>(
+                                                isExpanded: true,
+                                                value: '20',
+                                                icon: Icon(
+                                                  Icons.keyboard_arrow_down,
+                                                  size: 20.w,
+                                                  color: Colors.grey,
+                                                ),
+                                                items: ['20', '30', '40'].map((
+                                                  String value,
+                                                ) {
+                                                  return DropdownMenuItem<
+                                                    String
+                                                  >(
+                                                    value: value,
+                                                    child: Text(
+                                                      value,
+                                                      style: TextStyle(
+                                                        fontSize: 13.sp,
+                                                        color: Colors.grey[600],
+                                                      ),
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                                onChanged: (_) {},
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 16.h),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Note:\nEnter Values In Multiples Of\nLakhs In Investment.',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: Color(0xFF8E8E8E),
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 120.w,
+                                      height: 35.h,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const ChitSchemaScreen(
+                                                    initialTab: 0,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: primaryColor,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20.r,
+                                            ),
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                        child: Text(
+                                          'Submit',
+                                          style: TextStyle(fontSize: 14.sp),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            // Explore Section
-            Padding(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Explore',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  SizedBox(
-                    height: 180.h,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      children: [
-                        _buildExploreCard(
-                          '10,00,000',
-                          '10,000',
-                          true,
-                          primaryColor,
+                ),
+                // Explore Section
+                Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Explore',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
                         ),
-                        SizedBox(width: 16.w),
-                        _buildExploreCard(
-                          '50,00,000',
-                          '700',
-                          true,
-                          primaryColor,
+                      ),
+                      SizedBox(height: 10.h),
+                      SizedBox(
+                        height: 180.h,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            _buildExploreCard(
+                              '10,00,000',
+                              '10,000',
+                              true,
+                              primaryColor,
+                            ),
+                            SizedBox(width: 16.w),
+                            _buildExploreCard(
+                              '50,00,000',
+                              '700',
+                              true,
+                              primaryColor,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // Quick Links Section
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Quick Links',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildQuickLinkCard(
-                    "assets/home_images/quick_link1.png",
-                    'About Siva Saravana Chits ( P ) LTD',
-                    'About Siva Saravana Chits ( P ) LTD',
-                  ),
-                  SizedBox(height: 15.h),
-                  _buildQuickLinkCard(
-                    'assets/home_images/quick_link2.png',
-                    'Faq',
-                    'Frequently asked questions',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const FAQScreen(),
+                // Quick Links Section
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Quick Links',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
                         ),
-                      );
-                    },
+                      ),
+                      SizedBox(height: 16.h),
+                      _buildQuickLinkCard(
+                        "assets/home_images/quick_link1.png",
+                        'About Siva Saravana Chits ( P ) LTD',
+                        'About Siva Saravana Chits ( P ) LTD',
+                      ),
+                      SizedBox(height: 15.h),
+                      _buildQuickLinkCard(
+                        'assets/home_images/quick_link2.png',
+                        'Faq',
+                        'Frequently asked questions',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const FAQScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(height: 32.h),
+              ],
             ),
-            SizedBox(height: 32.h),
-          ],
-        ),
-      ),
-      const ChatboxWidget(),
-      ],
+          ),
+          const ChatboxWidget(),
+        ],
       ),
     );
   }
@@ -1091,7 +1088,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickLinkCard(String imagePath, String title, String subtitle, {VoidCallback? onTap}) {
+  Widget _buildQuickLinkCard(
+    String imagePath,
+    String title,
+    String subtitle, {
+    VoidCallback? onTap,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1314,6 +1316,92 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentItem(String id, String dueDate, String amount) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Color(0xFFF6F6F6),
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: const Color(0xFFD7D7D7), width: 0.5),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // ID
+          Text(
+            id,
+            style: TextStyle(
+              color: const Color(0xFF1E3A8A), // Dark blue
+              fontWeight: FontWeight.w600,
+              fontSize: 14.sp,
+            ),
+          ),
+          // Due Date
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Due Date',
+                style: TextStyle(color: Colors.grey, fontSize: 10.sp),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                dueDate,
+                style: TextStyle(
+                  color: const Color(0xFFDB1111),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.sp,
+                ),
+              ),
+            ],
+          ),
+          // Amount
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Amount',
+                style: TextStyle(color: Colors.grey, fontSize: 10.sp),
+              ),
+              SizedBox(height: 2.h),
+              Text(
+                '₹ $amount',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12.sp,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+          // Button
+          SizedBox(
+            height: 32.h,
+            child: ElevatedButton(
+              onPressed: () {
+                if (widget.onPaymentTap != null) {
+                  widget.onPaymentTap!();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD40909),
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r),
+                ),
+              ),
+              child: Text(
+                'Pay Now',
+                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700),
+              ),
+            ),
           ),
         ],
       ),

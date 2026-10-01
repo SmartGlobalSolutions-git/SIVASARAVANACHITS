@@ -12,10 +12,37 @@ import 'package:siva_saravana/Screens/settings_sections/setting_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/payment.dart';
 import 'package:siva_saravana/Screens/Home_Sections/passbook.dart';
 import 'package:siva_saravana/Screens/statements/statement.dart';
+import 'package:siva_saravana/services/profile_view_api.dart';
 
-class DrawersScreen extends StatelessWidget {
+class DrawersScreen extends StatefulWidget {
   final bool isFirstTimeUser;
   const DrawersScreen({super.key, this.isFirstTimeUser = false});
+
+  @override
+  State<DrawersScreen> createState() => _DrawersScreenState();
+}
+
+class _DrawersScreenState extends State<DrawersScreen> {
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserName();
+  }
+
+  Future<void> _fetchUserName() async {
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted) {
+      setState(() {
+        if (response != null && response['error'] == false) {
+          _userName = response['profile']?['name']?.toString() ?? 'User';
+        } else {
+          _userName = 'User';
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,67 +111,24 @@ class DrawersScreen extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 12.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Hello',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12.sp,
-                              ),
-                            ),
-                            Text(
-                              'Akhil',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.sp,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const NeedHelpScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10.w,
-                            vertical: 6.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(
-                              color: Color(0xFF9B9B9B),
-                              width: 0.6,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Hello',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12.sp,
                             ),
                           ),
-                          child: Row(
-                            children: [
-                              Image.asset(
-                                'assets/scheme_images/need_help.png',
-                                height: 16.h,
-                                width: 16.w,
-                              ),
-                              SizedBox(width: 4.w),
-                              Text(
-                                'Need Help ?',
-                                style: TextStyle(
-                                  color: Color(0xFF018F46),
-                                  fontSize: 12.sp,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            _userName.isEmpty ? 'Loading...' : _userName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16.sp,
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -169,7 +153,7 @@ class DrawersScreen extends StatelessWidget {
                                 );
                               }
                             ),
-                            if (!isFirstTimeUser)
+                            if (!widget.isFirstTimeUser)
                               _buildDrawerItem(
                                 'assets/drawer/payment.png',
                                 'Payment',
@@ -200,7 +184,7 @@ class DrawersScreen extends StatelessWidget {
                                 );
                               },
                             ),
-                            if (!isFirstTimeUser)
+                            if (!widget.isFirstTimeUser)
                               _buildDrawerItem(
                                 'assets/drawer/passbook.png',
                                 'Passbook',
@@ -221,7 +205,7 @@ class DrawersScreen extends StatelessWidget {
                                 );
                               },
                             ),
-                            if (!isFirstTimeUser) ...[
+                            if (!widget.isFirstTimeUser) ...[
                               _buildDrawerItem(
                                 'assets/drawer/prebiding.png',
                                 'Prebiding',

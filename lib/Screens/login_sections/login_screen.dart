@@ -163,30 +163,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
 
                       // Center 2-step progress pill indicator (Group 12 in Figma: Step 1 active)
-                      Container(
-                        width: 26.w,
-                        height: 5.h,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE5E7EB),
-                          borderRadius: BorderRadius.circular(3.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(3.r),
-                                ),
-                              ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 18.w,
+                            height: 5.h,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(3.r),
                             ),
-                            const Expanded(
-                              flex: 2,
-                              child: SizedBox.shrink(),
+                          ),
+                          SizedBox(width: 6.w),
+                          Container(
+                            width: 5.h,
+                            height: 5.h,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFD9D9D9),
+                              shape: BoxShape.circle,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

@@ -3,9 +3,37 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 
-class NeedHelpScreen extends StatelessWidget {
+import 'package:siva_saravana/services/profile_view_api.dart';
+
+class NeedHelpScreen extends StatefulWidget {
   final VoidCallback? onBackTap;
   const NeedHelpScreen({super.key, this.onBackTap});
+
+  @override
+  State<NeedHelpScreen> createState() => _NeedHelpScreenState();
+}
+
+class _NeedHelpScreenState extends State<NeedHelpScreen> {
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserName();
+  }
+
+  Future<void> _fetchUserName() async {
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted) {
+      setState(() {
+        if (response != null && response['error'] == false) {
+          _userName = response['profile']?['name']?.toString() ?? 'User';
+        } else {
+          _userName = 'User';
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +45,8 @@ class NeedHelpScreen extends StatelessWidget {
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.w),
           onPressed: () {
-            if (onBackTap != null) {
-              onBackTap!();
+            if (widget.onBackTap != null) {
+              widget.onBackTap!();
             } else {
               Navigator.pop(context);
             }
@@ -42,7 +70,7 @@ class NeedHelpScreen extends StatelessWidget {
           children: [
             SizedBox(height: 10.h),
             Text(
-              'Hi Akhil,',
+              'Hi ${_userName.isEmpty ? 'Loading...' : _userName},',
               style: GoogleFonts.inter(
                 fontSize: 24.sp,
                 fontWeight: FontWeight.w700,
@@ -137,7 +165,7 @@ class NeedHelpScreen extends StatelessWidget {
             
             Center(
               child: Text(
-                'Chat to Akhil 24/7 or one of our team',
+                'Chat with us 24/7 or one of our team',
                 style: GoogleFonts.inter(
                   fontSize: 12.sp,
                   color: Colors.black54,

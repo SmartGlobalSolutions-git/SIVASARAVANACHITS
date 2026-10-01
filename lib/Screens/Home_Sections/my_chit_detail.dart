@@ -7,6 +7,7 @@ import 'package:siva_saravana/Screens/statements/chit_statement.dart';
 import 'package:siva_saravana/Screens/statements/passbook_statement.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'package:intl/intl.dart';
+import '../../services/profile_view_api.dart';
 
 class MyChitDetailScreen extends StatefulWidget {
   final dynamic chitItem;
@@ -17,6 +18,26 @@ class MyChitDetailScreen extends StatefulWidget {
 }
 
 class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileName();
+  }
+
+  Future<void> _fetchProfileName() async {
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted && response != null && response['error'] == false) {
+      final profile = response['profile'];
+      if (profile != null && profile['name'] != null) {
+        setState(() {
+          _userName = profile['name'];
+        });
+      }
+    }
+  }
+
   String _formatAmount(dynamic amount) {
     if (amount == null) return '0';
     try {
@@ -31,7 +52,10 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
   }
 
   String _formatDate(dynamic dateString) {
-    if (dateString == null || dateString == '0' || dateString.toString().isEmpty) return '-';
+    if (dateString == null ||
+        dateString == '0' ||
+        dateString.toString().isEmpty)
+      return '-';
     try {
       final DateTime parsed = DateTime.parse(dateString.toString());
       return DateFormat('dd MMM yyyy').format(parsed);
@@ -50,17 +74,13 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
         backgroundColor: const Color(0xFFF3F3F5),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        leadingWidth: 40.w,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: Colors.black,
-            size: 24.sp,
-          ),
+          icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.sp),
           onPressed: () {
             Navigator.maybePop(context);
           },
         ),
+        titleSpacing: 0,
         title: Text(
           'Chits detail',
           style: TextStyle(
@@ -86,7 +106,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               ),
               child: Row(
                 children: [
-                  Image.asset('assets/scheme_images/need_help.png', width: 16.w, height: 16.h,),
+                  Image.asset(
+                    'assets/scheme_images/need_help.png',
+                    width: 16.w,
+                    height: 16.h,
+                  ),
                   SizedBox(width: 4.w),
                   Text(
                     'Need Help ?',
@@ -104,7 +128,9 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NotificationScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
               );
             },
             child: Image.asset(
@@ -123,9 +149,9 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             child: Column(
               children: [
                 _buildChitHeaderCard(),
-                SizedBox(height: 12.h),
+                SizedBox(height: 18.h),
                 _buildRunningBalance(),
-                SizedBox(height: 12.h),
+                SizedBox(height: 18.h),
                 _buildChitDuration(),
                 SizedBox(height: 12.h),
                 _buildActionButtons(),
@@ -155,176 +181,221 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Color(0xFFE2E5E8), width: 0.6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: const Color(0x40000000),
             offset: const Offset(0, 4),
+            blurRadius: 4,
+            spreadRadius: 0,
           ),
         ],
       ),
-      padding: EdgeInsets.all(16.w),
+      // Removed outer padding so inner containers can expand full width
       child: Column(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8FDF2),
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset('assets/home_images/persons.png', height: 24.h, width: 24.w,),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              children: [
+                Row(
                   children: [
-                    Text(
-                      widget.chitItem['Chit Name']?.toString() ?? 'Unknown',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16.sp,
-                        color: Colors.black,
+                    Container(
+                      padding: EdgeInsets.all(8.w),
+                      decoration: BoxDecoration(
+                        color: const Color(0x33018F46),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.asset(
+                        'assets/home_images/persons.png',
+                        height: 24.h,
+                        width: 24.w,
                       ),
                     ),
-                    Row(
+                    SizedBox(width: 12.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _userName,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.sp,
+                              color: Colors.black,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Row(
+                            children: [
+                              Text(
+                                'GROUP CODE ',
+                                style: TextStyle(
+                                  color: Color(0xFF475569),
+                                  fontSize: 12.sp,
+                                ),
+                              ),
+                              Text(
+                                widget.chitItem['Chit_id']?.toString() ?? '',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14.sp,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 4.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(18.r),
+                        border: Border.all(color: const Color(0x66A7F3D0)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 6.w,
+                            height: 6.w,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF008744),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          SizedBox(width: 4.w),
+                          Text(
+                            widget.chitItem['Chit Status']?.toString() ??
+                                'Unpriced',
+                            style: TextStyle(
+                              color: const Color(0xFF00562E),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'CHIT ID ',
-                          style: TextStyle(color: Colors.grey, fontSize: 12.sp),
-                        ),
-                        Text(
-                          widget.chitItem['Chit_id']?.toString() ?? '',
+                          'Chit Value',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF475569),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          '₹ ${_formatAmount(widget.chitItem['Chit Value'])}',
+                          style: TextStyle(
+                            color: AppColors.primaryColor,
+                            fontWeight: FontWeight.w700,
                             fontSize: 14.sp,
-                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Start Date',
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          _formatDate(widget.chitItem['Sdate']),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'End Date',
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          _formatDate(widget.chitItem['Ag_date']),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                            color: Color(0xFF1E293B),
                           ),
                         ),
                       ],
                     ),
                   ],
                 ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3FAF5),
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(color: const Color(0xFFE2F5EA)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 6.w,
-                      height: 6.w,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF018F46),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      widget.chitItem['Chit Status']?.toString() ?? 'Unpriced',
-                      style: TextStyle(
-                        color: const Color(0xFF018F46),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          SizedBox(height: 16.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Chit Value',
-                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    '₹ ${_formatAmount(widget.chitItem['Chit Value'])}',
-                    style: TextStyle(
-                      color: AppColors.primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14.sp,
-                    ),
-                  ),
-                ],
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F5FF),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(12.r),
+                bottomRight: Radius.circular(12.r),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Start Date',
-                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    _formatDate(widget.chitItem['Sdate']),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.sp,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'End Date',
-                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    _formatDate(widget.chitItem['Ag_date']),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.sp,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Divider(color: Colors.grey.shade200, height: 1),
-          SizedBox(height: 12.h),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/home_images/arrow.png', width: 24.w, height: 24.h,),
-              SizedBox(width: 8.w),
-              Text(
-                'TOTAL DIVIDEND',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/home_images/arrow.png',
+                  width: 24.w,
+                  height: 24.h,
                 ),
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                '₹ ${_formatAmount(widget.chitItem['Int Amount'] ?? 0)}',
-                style: TextStyle(
-                  color: const Color(0xFF0F3B20), // Dark green color
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16.sp,
+                SizedBox(width: 12.w),
+                Text(
+                  'TOTAL DIVIDEND',
+                  style: TextStyle(
+                    color: const Color(0xFF022C22),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.sp,
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(width: 12.w),
+                Text(
+                  '₹ ${_formatAmount(widget.chitItem['Int Amount'] ?? 0)}',
+                  style: TextStyle(
+                    color: const Color(0xFF003E21), // Dark green color
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18.sp,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -334,33 +405,37 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
   Widget _buildRunningBalance() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 12.h),
+      padding: EdgeInsets.symmetric(vertical: 10.h),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF8DE), // Light yellow bg
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: const Color(0xFFFD9AB07)),
+        border: Border.all(color: const Color(0xFFD9AB07)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Coins icon placeholder or material icon
-          Image.asset('assets/home_images/coin_plant.png', width: 24.w, height: 24.h,),
-          SizedBox(width: 8.w),
+          Image.asset(
+            'assets/home_images/coin_plant.png',
+            width: 28.w,
+            height: 28.h,
+          ),
+          SizedBox(width: 12.w),
           Text(
             'RUNNING BALANCE',
             style: TextStyle(
-              color: Colors.grey.shade800,
-              fontWeight: FontWeight.bold,
-              fontSize: 12.sp,
+              color: Color(0xFF022C22),
+              fontWeight: FontWeight.w600,
+              fontSize: 13.sp,
             ),
           ),
-          SizedBox(width: 8.w),
+          SizedBox(width: 10.w),
           Text(
             '₹ ${_formatAmount(widget.chitItem['cur_run_bal'])}',
             style: TextStyle(
-              color: const Color(0xFF0F3B20), // Dark green
-              fontWeight: FontWeight.bold,
-              fontSize: 16.sp,
+              color: const Color(0xFF003E21), // Dark green
+              fontWeight: FontWeight.w700,
+              fontSize: 18.sp,
             ),
           ),
         ],
@@ -369,19 +444,34 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
   }
 
   Widget _buildChitDuration() {
+    num paidDue =
+        num.tryParse(widget.chitItem['Paid Due']?.toString() ?? '0') ?? 0;
+    num noIns = num.tryParse(widget.chitItem['No Ins']?.toString() ?? '1') ?? 1;
+    if (noIns < 1) noIns = 1;
+
+    double progress = (noIns > 1 && paidDue > 1)
+        ? (paidDue - 1) / (noIns - 1)
+        : 0.0;
+    if (progress > 1.0) progress = 1.0;
+    if (progress < 0.0) progress = 0.0;
+
+    int remaining = (noIns - paidDue).toInt();
+    if (remaining < 0) remaining = 0;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
+        borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: const Color(0x10000000),
             offset: const Offset(0, 4),
+            blurRadius: 10,
+            spreadRadius: 0,
           ),
         ],
       ),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -392,25 +482,25 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                 'Chit Duration',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 14.sp,
-                  color: Colors.black,
+                  fontSize: 18.sp,
+                  color: Color(0xFF1E293B),
                 ),
               ),
               RichText(
                 text: TextSpan(
-                  text: '${widget.chitItem['Paid Due'] ?? 0}',
+                  text: '${paidDue.toInt()}',
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16.sp,
-                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 20.sp,
+                    color: Color(0xFF1E293B),
                   ),
                   children: [
                     TextSpan(
-                      text: ' / ${widget.chitItem['No Ins'] ?? 0} Months',
+                      text: ' / ${noIns.toInt()} Months',
                       style: TextStyle(
-                        fontWeight: FontWeight.normal,
-                        fontSize: 12.sp,
-                        color: Colors.grey,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14.sp,
+                        color: Color(0xFF94A3B8),
                       ),
                     ),
                   ],
@@ -418,57 +508,151 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               ),
             ],
           ),
-          SizedBox(height: 24.h),
-          // Custom Progress Bar representation
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              // Background track
-              Container(
-                height: 6.h,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(3.r),
-                ),
-              ),
-              // Filled track
-              FractionallySizedBox(
-                widthFactor: ((widget.chitItem['Paid Due'] ?? 0) as num) / ((widget.chitItem['No Ins'] ?? 1) as num > 0 ? (widget.chitItem['No Ins'] as num) : 1),
-                child: Container(
-                  height: 6.h,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(3.r),
+          SizedBox(height: 40.h),
+          Builder(
+            builder: (context) {
+              double totalWidth =
+                  1.sw - 72.w; // account for horizontal paddings
+              double dotWidth = 14.w;
+              double trackWidth = totalWidth - dotWidth;
+
+              List<int> milestones = [1];
+              for (int i = 5; i < noIns.toInt(); i += 5) {
+                milestones.add(i);
+              }
+              if (!milestones.contains(noIns.toInt())) {
+                milestones.add(noIns.toInt());
+              }
+              milestones.sort();
+
+              return Column(
+                children: [
+                  // Track and Tooltip
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Invisible container to set height and width
+                      SizedBox(height: 16.h, width: totalWidth),
+                      // Grey Track Wrapping Green Track
+                      Positioned(
+                        left: dotWidth / 2,
+                        child: Container(
+                          height: 14.h,
+                          width: trackWidth,
+                          padding: EdgeInsets.all(2.w),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(
+                              color: Color(0x99E2E8F0),
+                              width: 1,
+                            ),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            width: (trackWidth - 4.w) * progress,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Color(0xFF10B981), Color(0xFF0D9488)],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Tooltip
+                      if (paidDue > 0)
+                        Positioned(
+                          left:
+                              (dotWidth / 2) + ((trackWidth - 4.w) * progress),
+                          top: -6.h,
+                          child: FractionalTranslation(
+                            translation: Offset(-0.5, 0),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10.w,
+                                    vertical: 4.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF059669),
+                                    borderRadius: BorderRadius.circular(6.r),
+                                  ),
+                                  child: Text(
+                                    '${paidDue.toInt()}th',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                                CustomPaint(
+                                  size: Size(12.w, 6.h),
+                                  painter: TrianglePainter(
+                                    color: Color(0xFF059669),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ),
-              // Points along the track (1, 5, 10, 15, 20)
-              _buildProgressPoint(0.0, '1', isCompleted: true),
-              _buildProgressPoint(5/20, '5', isCompleted: true),
-              _buildProgressPoint(10/20, '10', isCompleted: false),
-              _buildProgressPoint(15/20, '15', isCompleted: false),
-              _buildProgressPoint(1.0, '20', isCompleted: false),
-              // The bubble on top of the current position
-              Positioned(
-                left: (MediaQuery.of(context).size.width - 64.w) * (((widget.chitItem['Paid Due'] ?? 0) as num) / ((widget.chitItem['No Ins'] ?? 1) as num > 0 ? (widget.chitItem['No Ins'] as num) : 1)) - 16.w, // Approximate center
-                top: -18.h,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(8.r),
+                  SizedBox(height: 20.h),
+                  // Milestones below the track
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      SizedBox(height: 52.h, width: totalWidth),
+                      ...milestones.map((m) {
+                        double factor = (noIns > 1)
+                            ? (m - 1) / (noIns - 1)
+                            : 1.0;
+                        bool isCompleted = m <= paidDue;
+
+                        return Positioned(
+                          left: (dotWidth / 2) + (trackWidth * factor),
+                          top: 0,
+                          child: FractionalTranslation(
+                            translation: Offset(-0.5, 0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: dotWidth,
+                                  height: dotWidth,
+                                  decoration: BoxDecoration(
+                                    color: isCompleted
+                                        ? Color(0xFF059669)
+                                        : Color(0xFFCBD5E1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                SizedBox(height: 12.h),
+                                Text(
+                                  '$m',
+                                  style: TextStyle(
+                                    color: isCompleted
+                                        ? Color(0xFF059669)
+                                        : Color(0xFF94A3B8),
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ],
                   ),
-                  child: Text(
-                    '${widget.chitItem['Paid Due'] ?? 0}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           ),
           SizedBox(height: 24.h),
           Row(
@@ -477,66 +661,47 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               Row(
                 children: [
                   Container(
-                    width: 8.w,
-                    height: 8.w,
+                    width: 12.w,
+                    height: 12.w,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryColor,
+                      color: Color(0xFF059669),
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 8.w),
                   Text(
-                    'Completed: ${widget.chitItem['Paid Due'] ?? 0}',
-                    style: TextStyle(color: Colors.black87, fontSize: 12.sp),
+                    'Completed: ${paidDue.toInt()}',
+                    style: TextStyle(
+                      color: Color(0xFF334155),
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
               Row(
                 children: [
                   Container(
-                    width: 8.w,
-                    height: 8.w,
+                    width: 12.w,
+                    height: 12.w,
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: Color(0xFFF1F5F9),
                       shape: BoxShape.circle,
+                      border: Border.all(color: Color(0x99E2E8F0), width: 1),
                     ),
                   ),
-                  SizedBox(width: 6.w),
+                  SizedBox(width: 8.w),
                   Text(
-                    'Remaining: ${((widget.chitItem['No Ins'] ?? 0) as num) - ((widget.chitItem['Paid Due'] ?? 0) as num)}',
-                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+                    'Remaining: $remaining',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressPoint(double positionFactor, String label, {required bool isCompleted}) {
-    return Positioned(
-      left: (MediaQuery.of(context).size.width - 64.w) * positionFactor - 4.w, // approximation based on padding
-      top: -1.h,
-      child: Column(
-        children: [
-          Container(
-            width: 8.w,
-            height: 8.w,
-            decoration: BoxDecoration(
-              color: isCompleted ? AppColors.primaryColor : Colors.grey.shade300,
-              shape: BoxShape.circle,
-            ),
-          ),
-          SizedBox(height: 6.h),
-          Text(
-            label,
-            style: TextStyle(
-              color: isCompleted ? AppColors.primaryColor : Colors.grey,
-              fontSize: 10.sp,
-              fontWeight: FontWeight.bold,
-            ),
           ),
         ],
       ),
@@ -551,7 +716,10 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ChitStatementScreen(chitId: widget.chitItem['Chit_id'])),
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ChitStatementScreen(chitId: widget.chitItem['Chit_id']),
+                ),
               );
             },
             child: Container(
@@ -563,7 +731,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.insert_drive_file, color: Colors.white, size: 24.w),
+                  Icon(
+                    Icons.insert_drive_file,
+                    color: Colors.white,
+                    size: 24.w,
+                  ),
                   SizedBox(height: 12.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -576,7 +748,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Icon(Icons.chevron_right, color: Colors.white, size: 16.w),
+                      Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                        size: 16.w,
+                      ),
                     ],
                   ),
                 ],
@@ -590,7 +766,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => PassbookStatementScreen(chitId: widget.chitItem['Chit_id'])),
+                MaterialPageRoute(
+                  builder: (context) => PassbookStatementScreen(
+                    chitId: widget.chitItem['Chit_id'],
+                  ),
+                ),
               );
             },
             child: Container(
@@ -615,7 +795,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Icon(Icons.chevron_right, color: Colors.white, size: 16.w),
+                      Icon(
+                        Icons.chevron_right,
+                        color: Colors.white,
+                        size: 16.w,
+                      ),
                     ],
                   ),
                 ],
@@ -650,7 +834,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           ),
           child: Row(
             children: [
-              Image.asset('assets/home_images/clock.png', width: 28.w, height: 28.w),
+              Image.asset(
+                'assets/home_images/clock.png',
+                width: 28.w,
+                height: 28.w,
+              ),
               SizedBox(width: 12.w),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -674,11 +862,20 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               ),
               const Spacer(),
               _buildCountdownBlock('00', 'Days'),
-              Text(':', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+              Text(
+                ':',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+              ),
               _buildCountdownBlock('01', 'Hours'),
-              Text(':', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+              Text(
+                ':',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+              ),
               _buildCountdownBlock('45', 'Minutes'),
-              Text(':', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp)),
+              Text(
+                ':',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
+              ),
               _buildCountdownBlock('30', 'Seconds'),
             ],
           ),
@@ -702,7 +899,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
-                    child: Image.asset('assets/home_images/auction.png', width: 16.w, height: 16.w),
+                    child: Image.asset(
+                      'assets/home_images/auction.png',
+                      width: 16.w,
+                      height: 16.w,
+                    ),
                   ),
                   SizedBox(width: 8.w),
                   Text(
@@ -722,27 +923,71 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Auction Date', style: TextStyle(color: Colors.blueGrey, fontSize: 10.sp)),
+                      Text(
+                        'Auction Date',
+                        style: TextStyle(
+                          color: Colors.blueGrey,
+                          fontSize: 10.sp,
+                        ),
+                      ),
                       SizedBox(height: 4.h),
-                      Text('12/08/2026', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                      Text(
+                        '12/08/2026',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
                     ],
                   ),
-                  Container(width: 1, height: 30.h, color: Colors.blueGrey.withOpacity(0.2)),
+                  Container(
+                    width: 1,
+                    height: 30.h,
+                    color: Colors.blueGrey.withOpacity(0.2),
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text('Auction No.', style: TextStyle(color: Colors.blueGrey, fontSize: 10.sp)),
+                      Text(
+                        'Auction No.',
+                        style: TextStyle(
+                          color: Colors.blueGrey,
+                          fontSize: 10.sp,
+                        ),
+                      ),
                       SizedBox(height: 4.h),
-                      Text('6', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                      Text(
+                        '6',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
                     ],
                   ),
-                  Container(width: 1, height: 30.h, color: Colors.blueGrey.withOpacity(0.2)),
+                  Container(
+                    width: 1,
+                    height: 30.h,
+                    color: Colors.blueGrey.withOpacity(0.2),
+                  ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Auction Time', style: TextStyle(color: Colors.blueGrey, fontSize: 10.sp)),
+                      Text(
+                        'Auction Time',
+                        style: TextStyle(
+                          color: Colors.blueGrey,
+                          fontSize: 10.sp,
+                        ),
+                      ),
                       SizedBox(height: 4.h),
-                      Text('4:00 PM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp)),
+                      Text(
+                        '4:00 PM',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -771,17 +1016,27 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                 width: 110.w,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE5A122), // Orange
-                  borderRadius: BorderRadius.horizontal(left: Radius.circular(8.r)),
+                  borderRadius: BorderRadius.horizontal(
+                    left: Radius.circular(8.r),
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('assets/home_images/auction.gif', width: 32.w, height: 32.w),
+                    Image.asset(
+                      'assets/home_images/auction.gif',
+                      width: 32.w,
+                      height: 32.w,
+                    ),
                     SizedBox(height: 4.h),
                     Text(
                       'Previous Auction\nDetail',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontSize: 10.sp, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -796,19 +1051,51 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Auction Date', style: TextStyle(color: Colors.grey.shade800, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Auction Date',
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           SizedBox(height: 6.h),
-                          Text('12/08/2026', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: Colors.black)),
+                          Text(
+                            '12/08/2026',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.sp,
+                              color: Colors.black,
+                            ),
+                          ),
                         ],
                       ),
-                      Container(width: 1, height: 40.h, color: Colors.grey.shade300),
+                      Container(
+                        width: 1,
+                        height: 40.h,
+                        color: Colors.grey.shade300,
+                      ),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Auction Amount', style: TextStyle(color: Colors.grey.shade800, fontSize: 10.sp, fontWeight: FontWeight.bold)),
+                          Text(
+                            'Auction Amount',
+                            style: TextStyle(
+                              color: Colors.grey.shade800,
+                              fontSize: 10.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           SizedBox(height: 6.h),
-                          Text('50,00,000', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.sp, color: AppColors.primaryColor)),
+                          Text(
+                            '50,00,000',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13.sp,
+                              color: AppColors.primaryColor,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -888,13 +1175,29 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           SizedBox(height: 2.h),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 8.sp,
-              color: Colors.grey.shade700,
-            ),
+            style: TextStyle(fontSize: 8.sp, color: Colors.grey.shade700),
           ),
         ],
       ),
     );
   }
+}
+
+class TrianglePainter extends CustomPainter {
+  final Color color;
+
+  TrianglePainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()..color = color;
+    Path path = Path();
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width / 2, size.height);
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
