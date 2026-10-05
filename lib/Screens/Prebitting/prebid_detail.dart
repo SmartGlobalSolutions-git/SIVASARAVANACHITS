@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Prebitting/terms_condition.dart';
 
-const Color kScreenBg = Color(0xFFF7F7F7);
+const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kAuctionCardBg = Color(0xFFFFFCF0);
 const Color kAuctionCardBorder = Color(0xFFE2E5E8);
 const Color kLabelGrey = Color(0xFF64748B);
@@ -115,32 +115,32 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
       backgroundColor: kScreenBg,
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+        padding: EdgeInsets.fromLTRB(16.w, 25.h, 16.w, 24.h),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildAuctionDetailsCard(),
-            SizedBox(height: 24.h),
             _buildCountdownRow(),
+            SizedBox(height: 24.h),
+            _buildAuctionDetailsCard(),
+            SizedBox(height: 16.h),
+            _buildRunningBalanceCard(),
             SizedBox(height: 24.h),
             Text(
               'Pre-Bid Details',
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 14.57.sp,
-                height: 25.5 / 14.57,
+                fontWeight: FontWeight.w700,
+                fontSize: 16.sp,
                 color: kHeadingDark,
               ),
             ),
-            SizedBox(height: 6.h),
+            SizedBox(height: 12.h),
             Text(
               'Enter Pre-Bid Amount',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
-                fontSize: 12.75.sp,
-                height: 21.85 / 12.75,
+                fontSize: 14.sp,
                 color: kInputLabelBrown,
               ),
             ),
@@ -152,13 +152,11 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w400,
-                fontSize: 10.sp,
-                height: 14.57 / 10,
-                letterSpacing: 0.55,
+                fontSize: 12.sp,
                 color: kInputLabelBrown,
               ),
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 24.h),
             _buildTermsCard(context),
           ],
         ),
@@ -234,168 +232,149 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
   // ---------------------------- AUCTION DETAILS CARD ----------------------------
   Widget _buildAuctionDetailsCard() {
     return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(19.w, 19.h, 19.w, 24.h),
-      decoration: BoxDecoration(
-        color: kAuctionCardBg,
-        borderRadius: BorderRadius.circular(7.84.r),
-        border: Border.all(color: kAuctionCardBorder, width: 0.59),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title row: lock icon + "Auction Details".
-          Row(
-            children: [
-              Container(
-                width: 32.sp,
-                height: 32.sp,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF4CD),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                alignment: Alignment.center,
-                child: Image.asset(
-                  'assets/prebitting/auction.png',
-                  width: 16.sp,
-                  height: 16.sp,
-                ),
-              ),
-              SizedBox(width: 10.w),
-              Text(
-                'Auction Details',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13.71.sp,
-                  height: 19.59 / 13.71,
-                  color: kValueDark,
-                ),
-              ),
-            ],
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE2EDF8),
+            border: Border.all(color: Color(0xFFF1F5F9)), // Light blue grey
+            borderRadius: BorderRadius.circular(12.r),
           ),
-          SizedBox(height: 15.h),
-          // AUCTION DATE row.
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.calendar_today_outlined, color: const Color(0xFF94A3B8), size: 16.sp),
-              SizedBox(width: 8.w),
-              Text(
-                'AUCTION DATE',
-                style: TextStyle(
-                  fontFamily: 'Manrope',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 10.77.sp,
-                  height: 16.16 / 10.77,
-                  letterSpacing: 0.54,
-                  color: kLabelGrey,
-                ),
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  _formatDate(widget.auctionDateTime),
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.71.sp,
-                    height: 19.59 / 13.71,
-                    color: kValueDark,
+              Row(
+                children: [
+                  Image.asset(
+                    'assets/home_images/auction.png',
+                    width: 25.w,
+                    height: 25.w,
                   ),
-                ),
-              ),
-              if (_isAuctionToday) ...[
-                SizedBox(width: 8.w),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 5.88.w, vertical: 1.96.h),
-                  decoration: BoxDecoration(
-                    color: kTodayBg.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(3.92.r),
-                  ),
-                  child: Text(
-                    'Today',
+                  SizedBox(width: 10.w),
+                  Text(
+                    'Auction Details',
                     style: TextStyle(
-                      fontFamily: 'Manrope',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 9.79.sp,
-                      height: 14.69 / 9.79,
-                      color: kTodayText,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                      color: Colors.black,
                     ),
                   ),
-                ),
-              ],
-            ],
-          ),
-          SizedBox(height: 10.h),
-          // AUCTION STARTS AT row.
-          Row(
-            children: [
-              Icon(Icons.access_time, color: const Color(0xFF94A3B8), size: 16.sp),
-              SizedBox(width: 8.w),
-              Text(
-                'AUCTION STARTS AT',
-                style: TextStyle(
-                  fontFamily: 'Manrope',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 10.77.sp,
-                  height: 16.16 / 10.77,
-                  letterSpacing: 0.54,
-                  color: kLabelGrey,
-                ),
+                ],
               ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Text(
-                  _formatTime(widget.auctionDateTime),
-                  style: TextStyle(
-                    fontFamily: 'Manrope',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.71.sp,
-                    height: 19.59 / 13.71,
-                    color: kValueDark,
+              Divider(color: Color(0xFFCDD2DA), thickness: 0.7),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Auction Date',
+                        style: TextStyle(
+                          color: Color(0xFF505255),
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '12/08/2026',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Last Auction Amount',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15.67.sp,
-                    color: kAmountGreen,
+                  Container(width: 1, height: 30.h, color: Color(0xFFCDD2DA)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Auction No.',
+                        style: TextStyle(
+                          color: Color(0xFF505255),
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '6',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ),
-              SizedBox(width: 10.w),
-              Text(
-                '₹ ${_formatAmount(widget.lastAuctionAmount)}',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18.sp,
-                  color: kAmountGreen,
-                ),
+                  Container(width: 1, height: 30.h, color: Color(0xFFCDD2DA)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Auction Time',
+                        style: TextStyle(
+                          color: Color(0xFF505255),
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '4:00 PM',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
-          SizedBox(height: 10.h),
-          Center(
-            child: Text(
-              'Pre-Bid Closes 2 Hrs Before Start',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontStyle: FontStyle.italic,
-                fontSize: 11.75.sp,
-                height: 15.67 / 11.75,
-                color: kClosesRed,
-              ),
+        );
+  }
+
+  Widget _buildRunningBalanceCard() {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD9AB07), // gold
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(6.w),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: Image.asset(
+              'assets/home_images/coin_plant.png',
+              width: 24.w,
+              height: 24.w,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Text(
+            'RUNNING BALANCE ',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w500,
+              fontSize: 14.sp,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            '₹ ${_formatAmount(widget.lastAuctionAmount)}',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.bold,
+              fontSize: 18.sp,
+              color: Colors.white,
             ),
           ),
         ],
@@ -443,7 +422,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
   Widget _buildAmountInput() {
     return Container(
       width: double.infinity,
-      height: 50.h,
+      height: 40.h,
       padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
       decoration: BoxDecoration(
         color: kInputBg,
@@ -492,7 +471,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: kTermsCardBg,
-        borderRadius: BorderRadius.circular(10.86.r),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: kTermsCardBorder, width: 0.91),
       ),
       child: Row(
@@ -501,12 +480,15 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
           GestureDetector(
             onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
             child: Container(
-              width: 19.91.w,
-              height: 19.91.h,
+              width: 16.w,
+              height: 15.h,
               decoration: BoxDecoration(
                 color: _agreedToTerms ? kCheckboxGreen : Colors.white,
-                borderRadius: BorderRadius.circular(3.62.r),
-                border: Border.all(color: Colors.black, width: 0.91),
+                borderRadius: BorderRadius.circular(3.r),
+                border: Border.all(
+                  color: _agreedToTerms ? Colors.transparent : Colors.black,
+                  width: 0.5,
+                ),
               ),
               alignment: Alignment.center,
               child: _agreedToTerms
@@ -522,30 +504,27 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
           Expanded(
             child: GestureDetector(
               onTap: () => _openTermsAndConditions(context),
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'I have read and agree to the\n',
-                      style: TextStyle(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('I have read and agree to the', 
+                  style: TextStyle(
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
                         fontStyle: FontStyle.normal,
                         fontSize: 14.sp,
                         color: Colors.black87,
                       ),
-                    ),
-                    TextSpan(
-                      text: 'Pre-Bidding Terms & Conditions',
-                      style: TextStyle(
+                  ),
+                  SizedBox(height: 4.h),
+                  Text('Pre-Bidding Terms & Conditions', 
+                  style: TextStyle(
                         fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w400,
                         fontSize: 14.sp,
                         color: kAmountGreen,
-                      ),
-                    ),
-                  ],
-                ),
+                      ),)
+                ],
               ),
             ),
           ),

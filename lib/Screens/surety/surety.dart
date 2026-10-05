@@ -150,7 +150,6 @@ class SuretyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 345,
-      height: 240,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),

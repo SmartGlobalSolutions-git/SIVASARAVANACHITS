@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:siva_saravana/Screens/chit_schemes/chit_schemes.dart';
 import 'first_time_home_screen.dart';
-import 'chit_schemes/chitschema.dart';
 import 'Home_Sections/need_help_screen.dart';
 import 'Home_Sections/drawers_screen.dart';
 import '../widgets/first_time_bottom_nav.dart';
@@ -30,7 +30,7 @@ class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
           });
         },
       ),
-      ChitSchemaScreen(
+      ChitSchemesScreen(
         initialTab: 0,
         onBackTap: () {
           setState(() {

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'prebid_detail.dart';
+import 'package:intl/intl.dart';
+import '../../services/prebid_api.dart';
+import '../../services/profile_view_api.dart';
 
 const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kCardBorderColor = Color(0xFFA7F3D0);
@@ -18,76 +21,63 @@ const Color kNeedHelpTextColor = Color(0xFF018F46);
 const Color kPrebidGradientStart = Color(0xFFE2B721);
 const Color kPrebidGradientEnd = Color(0xFFC39F1E);
 
-// ----------------------------------------------------------------------
-// MODEL
-// ----------------------------------------------------------------------
-class PrebidItem {
-  final String name;
-  final String groupCode;
-  final String startDate;
-  final String endDate;
-  final double runningBalance;
-  final bool isPrized;
-
-  const PrebidItem({
-    required this.name,
-    required this.groupCode,
-    required this.startDate,
-    required this.endDate,
-    required this.runningBalance,
-    this.isPrized = false,
-  });
-}
-
-// ----------------------------------------------------------------------
-// SCREEN
-// ----------------------------------------------------------------------
-class PrebiddingListScreen extends StatelessWidget {
+class PrebiddingListScreen extends StatefulWidget {
   const PrebiddingListScreen({super.key});
 
-  // Dummy data — swap this out for your API response.
-  static const List<PrebidItem> _items = [
-    PrebidItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      startDate: '01 Jan 2026',
-      endDate: '31 Dec 2026',
-      runningBalance: 0,
-    ),
-    PrebidItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      startDate: '01 Jan 2026',
-      endDate: '31 Dec 2026',
-      runningBalance: 500000,
-    ),
-    PrebidItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      startDate: '01 Jan 2026',
-      endDate: '31 Dec 2026',
-      runningBalance: 0,
-    ),
-    PrebidItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      startDate: '01 Jan 2026',
-      endDate: '31 Dec 2026',
-      runningBalance: 0,
-    ),
-  ];
+  @override
+  State<PrebiddingListScreen> createState() => _PrebiddingListScreenState();
+}
+
+class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
+  bool _isLoading = true;
+  List<dynamic> _items = [];
+  String _userName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfileName();
+    _fetchPrebidList();
+  }
+
+  Future<void> _fetchProfileName() async {
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted && response != null && response['error'] == false) {
+      final profile = response['profile'];
+      if (profile != null && profile['name'] != null) {
+        setState(() {
+          _userName = profile['name'];
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchPrebidList() async {
+    final items = await PrebidApiService.fetchPrebidList();
+    if (mounted) {
+      setState(() {
+        _items = items ?? [];
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kScreenBg,
       appBar: _buildAppBar(context),
-      body: ListView.separated(
-        padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => SizedBox(height: 16.h),
-        itemBuilder: (context, index) => PrebidCard(item: _items[index]),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _items.isEmpty
+          ? const Center(child: Text("No prebid items found."))
+          : ListView.separated(
+              padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
+              itemCount: _items.length,
+              separatorBuilder: (_, __) => SizedBox(height: 16.h),
+              itemBuilder: (context, index) =>
+                  PrebidCard(item: _items[index], userName: _userName),
+            ),
     );
   }
 
@@ -99,11 +89,7 @@ class PrebiddingListScreen extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       titleSpacing: 0,
       leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back,
-          size: 24.sp,
-          color: Colors.black,
-        ),
+        icon: Icon(Icons.arrow_back, size: 24.sp, color: Colors.black),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
@@ -166,31 +152,55 @@ class PrebiddingListScreen extends StatelessWidget {
 // CARD
 // ----------------------------------------------------------------------
 class PrebidCard extends StatelessWidget {
-  final PrebidItem item;
-  const PrebidCard({super.key, required this.item});
+  final dynamic item;
+  final String userName;
+  const PrebidCard({super.key, required this.item, required this.userName});
 
-  String _formatAmount(double v) {
-    final String s = v.toInt().toString();
-    final reversed = s.split('').reversed.toList();
-    final buffer = StringBuffer();
-    for (int i = 0; i < reversed.length; i++) {
-      if (i != 0 && i % 3 == 0) buffer.write(',');
-      buffer.write(reversed[i]);
+  String _formatAmount(dynamic amount) {
+    if (amount == null) return '0';
+    try {
+      final formatter = NumberFormat('#,##,###');
+      if (amount is int) return formatter.format(amount);
+      if (amount is double) return formatter.format(amount);
+      if (amount is String) return formatter.format(double.parse(amount));
+    } catch (e) {
+      return amount.toString();
     }
-    return buffer.toString().split('').reversed.join();
+    return amount.toString();
+  }
+
+  String _formatDate(dynamic dateString) {
+    if (dateString == null ||
+        dateString == '0' ||
+        dateString.toString().isEmpty)
+      return '-';
+    try {
+      final DateTime parsed = DateTime.parse(dateString.toString());
+      return DateFormat('dd MMM yyyy').format(parsed);
+    } catch (e) {
+      return dateString.toString();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    String chitName = userName.isNotEmpty
+        ? userName
+        : (item['Chit Name']?.toString() ?? '');
+    String groupCode = item['Group Name']?.toString() ?? '';
+    String startDate = _formatDate(item['Start Date']);
+    String endDate = _formatDate(item['End Date']);
+    double runBal =
+        double.tryParse(item['Running Balance']?.toString() ?? '0') ?? 0.0;
+    bool isPrized = item['Status']?.toString().toLowerCase() == 'prized';
+
     return Container(
       width: 328,
       padding: EdgeInsets.fromLTRB(17.w, 10.h, 13.w, 15.h),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(
-          color: kCardBorderColor.withValues(alpha: 0.6),
-        ),
+        border: Border.all(color: kCardBorderColor.withValues(alpha: 0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,7 +210,7 @@ class PrebidCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  item.name,
+                  "$chitName - ${item['Chit_id'] ?? ''}",
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
@@ -209,7 +219,7 @@ class PrebidCard extends StatelessWidget {
                   ),
                 ),
               ),
-              _StatusBadge(isPrized: item.isPrized),
+              _StatusBadge(isPrized: isPrized),
             ],
           ),
           SizedBox(height: 2.h),
@@ -226,7 +236,7 @@ class PrebidCard extends StatelessWidget {
               ),
               SizedBox(width: 8.w),
               Text(
-                item.groupCode,
+                groupCode,
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w700,
@@ -239,7 +249,7 @@ class PrebidCard extends StatelessWidget {
           SizedBox(height: 4.h),
           Container(
             width: 320,
-            padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 6.h),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
               color: kCreamBoxColor.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12.12.r),
@@ -250,15 +260,15 @@ class PrebidCard extends StatelessWidget {
                 _InfoRow(
                   iconAsset: 'assets/prebitting/date.png',
                   label: 'Start - End Date',
-                  value: '${item.startDate} – ${item.endDate}',
+                  value: '$startDate - \n$endDate',
                 ),
                 SizedBox(height: 5.h),
                 _InfoRow(
                   iconAsset: 'assets/prebitting/cash.png',
                   label: 'Running Balance',
-                  value: '₹ ${_formatAmount(item.runningBalance)}',
+                  value: '₹ ${_formatAmount(item['Running Balance'])}',
                 ),
-                SizedBox(height: 6.h),
+                SizedBox(height: 10.h),
                 Center(
                   child: GestureDetector(
                     onTap: () {
@@ -266,10 +276,12 @@ class PrebidCard extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => PrebiddingDetailScreen(
-                            groupName: item.name,
-                            groupCode: item.groupCode,
-                            auctionDateTime: DateTime.now().add(const Duration(hours: 4)),
-                            lastAuctionAmount: item.runningBalance,
+                            groupName: groupCode,
+                            groupCode: item['Chit_id']?.toString() ?? '',
+                            auctionDateTime: DateTime.now().add(
+                              const Duration(hours: 4),
+                            ),
+                            lastAuctionAmount: runBal,
                           ),
                         ),
                       );
@@ -321,7 +333,10 @@ class _StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: kBadgeBgColor,
         borderRadius: BorderRadius.circular(8862.75.r), // fully pill-shaped
-        border: Border.all(color: kBadgeDotColor.withValues(alpha: 0.15), width: 0.89),
+        border: Border.all(
+          color: kBadgeDotColor.withValues(alpha: 0.15),
+          width: 0.89,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

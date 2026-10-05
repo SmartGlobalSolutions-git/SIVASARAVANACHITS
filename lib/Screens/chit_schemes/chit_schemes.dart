@@ -1,0 +1,593 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
+import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
+import 'package:siva_saravana/Screens/chit_schemes/subscription_screen.dart';
+import '../../services/chit_scheme_api.dart';
+import 'package:siva_saravana/widgets/chatbox_widget.dart';
+
+class ChitSchemesScreen extends StatefulWidget {
+  final int initialTab;
+  final VoidCallback? onBackTap;
+  const ChitSchemesScreen({super.key, this.initialTab = 0, this.onBackTap});
+
+  @override
+  State<ChitSchemesScreen> createState() => _ChitSchemesScreenState();
+}
+
+class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
+  late int _selectedTabIndex;
+  List<dynamic> _schemes = [];
+  List<dynamic> _availableChits = [];
+  bool _isLoadingSchemes = true;
+  bool _isLoadingAvailable = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedTabIndex = widget.initialTab;
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    final schemesData = await ChitSchemeApiService.fetchChitSchemes();
+    if (mounted) {
+      setState(() {
+        _schemes = schemesData ?? [];
+        _isLoadingSchemes = false;
+      });
+    }
+
+    final availableData = await ChitSchemeApiService.fetchAvailableChits();
+    if (mounted) {
+      setState(() {
+        _availableChits = availableData ?? [];
+        _isLoadingAvailable = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentList = _selectedTabIndex == 0 ? _schemes : _availableChits;
+    final isLoading = _selectedTabIndex == 0 ? _isLoadingSchemes : _isLoadingAvailable;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF3F3F5),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(
+            Icons.menu,
+            color: Colors.black,
+            size: 24.sp,
+          ),
+          onPressed: () {
+            if (widget.onBackTap != null) {
+              widget.onBackTap!();
+            } else {
+              Navigator.maybePop(context);
+            }
+          },
+        ),
+        titleSpacing: 0,
+        title: Text(
+          'Chits Schemes',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontFamily: 'Inter',
+            fontWeight: FontWeight.w400,
+            color: Colors.black,
+          ),
+        ),
+        actions: [
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFF9B9B9B), width: 0.5),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/scheme_images/need_help.png',
+                    width: 14.w,
+                    height: 14.w,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'Need Help ?',
+                    style: TextStyle(color: const Color(0xFF0C8A4B), fontSize: 10.sp, fontFamily: 'Inter'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationScreen()),
+              );
+            },
+            child: Image.asset(
+              'assets/home_images/notification.png',
+              width: 22.w,
+              height: 22.w,
+              color: Colors.black,
+            ),
+          ),
+          SizedBox(width: 16.w),
+        ],
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _buildTabBar(),
+                if (_selectedTabIndex == 0) _buildTableHeader(),
+                Expanded(
+                  child: isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : currentList.isEmpty
+                          ? const Center(child: Text('No data found.'))
+                          : ListView.separated(
+                              padding: _selectedTabIndex == 1 ? EdgeInsets.symmetric(vertical: 16.h) : EdgeInsets.zero,
+                              itemCount: currentList.length,
+                              separatorBuilder: (context, index) => _selectedTabIndex == 0 
+                                  ? Divider(height: 1, thickness: 1, color: const Color(0xFFE5E7EB)) 
+                                  : SizedBox(height: 16.h),
+                              itemBuilder: (context, index) {
+                                final item = currentList[index];
+                                return _selectedTabIndex == 0
+                                    ? _buildTableRow(item)
+                                    : _buildAvailableChitCard(item);
+                              },
+                            ),
+                ),
+              ],
+            ),
+            const ChatboxWidget(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      color: Colors.white,
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTabIndex = 0),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                decoration: BoxDecoration(
+                  color: _selectedTabIndex == 0 ? const Color(0xFFE8F6ED) : Colors.white,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: _selectedTabIndex == 0 ? const Color(0xFF0C8A4B) : Colors.transparent,
+                      width: 2.h,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  'Chits Schemes',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    color: _selectedTabIndex == 0 ? const Color(0xFF0C8A4B) : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _selectedTabIndex = 1),
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                decoration: BoxDecoration(
+                  color: _selectedTabIndex == 1 ? const Color(0xFFE8F6ED) : Colors.white,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: _selectedTabIndex == 1 ? const Color(0xFF0C8A4B) : Colors.transparent,
+                      width: 2.h,
+                    ),
+                  ),
+                ),
+                child: Text(
+                  'Available Chits',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    color: _selectedTabIndex == 1 ? const Color(0xFF0C8A4B) : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableHeader() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              'Chit Value',
+              style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter', fontWeight: FontWeight.w400, color: Colors.black87),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Members',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter', fontWeight: FontWeight.w400, color: Colors.black87),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Months',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter', fontWeight: FontWeight.w400, color: Colors.black87),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Text(
+              'View',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter', fontWeight: FontWeight.w400, color: Colors.black87),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableRow(dynamic item) {
+    final String chitValue = '₹ ${_formatAmount(double.tryParse(item['ch_value']?.toString() ?? '0') ?? 0)}';
+    final String members = '${item['nom'] ?? '0'}';
+    final String months = '${item['nom'] ?? '0'}';
+
+    return Container(
+      color: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              chitValue,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF0C8A4B),
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              members,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter', fontWeight: FontWeight.w400, color: Colors.black87),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              months,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14.sp, fontFamily: 'Inter', fontWeight: FontWeight.w400, color: Colors.black87),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Center(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SubscriptionScreen(chitId: item['id'] ?? 0),
+                    ),
+                  );
+                },
+                child: Image.asset(
+                  'assets/scheme_images/view-svgrepo-com 2 (1).png',
+                  width: 22.w,
+                  height: 22.w,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.remove_red_eye_outlined,
+                    size: 22.sp,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvailableChitCard(dynamic item) {
+    final String chitValueStr = item['value']?.toString() ?? '200000';
+    final double chitValue = double.tryParse(chitValueStr) ?? 200000;
+    final int months = int.tryParse(item['nom']?.toString() ?? '20') ?? 20;
+
+    int years = months ~/ 12;
+    int remainingMonths = months % 12;
+    String durationStr = '';
+    if (years > 0) durationStr += '$years Year${years > 1 ? 's' : ''} ';
+    if (remainingMonths > 0) durationStr += '$remainingMonths Month${remainingMonths > 1 ? 's' : ''}';
+    durationStr = durationStr.trim();
+    if (durationStr.isEmpty) durationStr = '$months Months';
+
+    final double halfValue = chitValue / 2;
+    
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(color: const Color(0xFF0C8A4B), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
+            child: Text(
+              'Chit Value - ₹ ${_formatAmount(chitValue)}',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF0C8A4B),
+              ),
+            ),
+          ),
+          
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6F8FA),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.calendar_today_outlined, color: const Color(0xFF0C8A4B), size: 12.sp),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Total Months', style: TextStyle(fontSize: 8.sp, color: Colors.grey, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text('$months Months', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.access_time, color: const Color(0xFF0C8A4B), size: 12.sp),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Duration', style: TextStyle(fontSize: 8.sp, color: Colors.grey, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(durationStr, style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.people_outline, color: const Color(0xFF0C8A4B), size: 12.sp),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Available Slots', style: TextStyle(fontSize: 8.sp, color: Colors.grey, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text('10 Slots', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          
+          SizedBox(height: 8.h),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Text(
+              'Ticket Details',
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Inter',
+                color: Colors.black87,
+              ),
+            ),
+          ),
+          SizedBox(height: 5.h),
+          
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F7FD),
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(color: const Color(0xFFE2EAF4)),
+                    ),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/scheme_images/ticket.png', color: const Color(0xFF1B64B7), width: 20.w, height: 20.w, errorBuilder: (context, error, stackTrace)=>Icon(Icons.confirmation_num_outlined, color: const Color(0xFF1B64B7), size: 22.sp)),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('½ Ticket', style: TextStyle(fontSize: 9.sp, color: Colors.grey, fontFamily: 'Inter')),
+                              Text('₹${_formatAmount(halfValue)}', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFD6E8FC),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text('8 Slots', style: TextStyle(fontSize: 9.sp, color: const Color(0xFF1B64B7), fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF9F2),
+                      borderRadius: BorderRadius.circular(6.r),
+                      border: Border.all(color: const Color(0xFFFCECDA)),
+                    ),
+                    child: Row(
+                      children: [
+                        Image.asset('assets/scheme_images/ticket.png', color: const Color(0xFFD98E04), width: 20.w, height: 20.w, errorBuilder: (context, error, stackTrace)=>Icon(Icons.confirmation_num_outlined, color: const Color(0xFFD98E04), size: 20.sp)),
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('1 Ticket', style: TextStyle(fontSize: 9.sp, color: Colors.grey, fontFamily: 'Inter')),
+                              Text('₹${_formatAmount(chitValue)}', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFBE4C6),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text('2 Slots', style: TextStyle(fontSize: 9.sp, color: const Color(0xFFD98E04), fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          SizedBox(height: 10.h),
+          
+          GestureDetector(
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Detail view coming soon')),
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h).copyWith(top: 0),
+              padding: EdgeInsets.symmetric(vertical: 8.h),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0C8A4B),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'View Details',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: 'Inter',
+                    ),
+                  ),
+                  SizedBox(width: 4.w),
+                  Icon(Icons.chevron_right, color: Colors.white, size: 20.sp),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatAmount(double v) {
+    final String s = v.toInt().toString();
+    final reversed = s.split('').reversed.toList();
+    final buffer = StringBuffer();
+    for (int i = 0; i < reversed.length; i++) {
+      if (i != 0 && i % 3 == 0) buffer.write(',');
+      buffer.write(reversed[i]);
+    }
+    return buffer.toString().split('').reversed.join();
+  }
+}

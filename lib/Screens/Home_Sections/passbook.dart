@@ -5,8 +5,9 @@ import 'package:siva_saravana/widgets/chatbox_widget.dart';
 
 class PassbookScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
+  final VoidCallback? onMenuTap;
   
-  const PassbookScreen({Key? key, this.onBackToHome}) : super(key: key);
+  const PassbookScreen({Key? key, this.onBackToHome, this.onMenuTap}) : super(key: key);
 
   @override
   State<PassbookScreen> createState() => _PassbookScreenState();
@@ -62,17 +63,17 @@ class _PassbookScreenState extends State<PassbookScreen> {
         elevation: 0,
         leading: GestureDetector(
           onTap: () {
-            if (widget.onBackToHome != null) {
-              widget.onBackToHome!();
-            } else {
-              Navigator.pop(context);
+            if (widget.onMenuTap != null) {
+              widget.onMenuTap!();
             }
           },
-          child: const Icon(Icons.arrow_back, color: Colors.black),
+          child: const Icon(Icons.menu, color: Colors.black),
         ),
+        titleSpacing: 0,
+        surfaceTintColor: Colors.transparent,
         title: Text(
           'Passbook',
-          style: TextStyle(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.w500),
+          style: TextStyle(color: Colors.black, fontSize: 16.sp, fontWeight: FontWeight.w600),
         ),
       ),
       body: Stack(

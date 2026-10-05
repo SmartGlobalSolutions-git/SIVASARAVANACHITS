@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
-import 'package:siva_saravana/Screens/chit_schemes/chitschema.dart';
+import 'package:siva_saravana/Screens/chit_schemes/chit_schemes.dart';
 import '../../constants/app_colors.dart';
 import 'package:siva_saravana/widgets/need_help_bottom_sheet.dart';
 
@@ -160,7 +160,7 @@ class FirstTimeHomeScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const ChitSchemaScreen(initialTab: 0),
+                                const ChitSchemesScreen(initialTab: 0),
                           ),
                         );
                       },
@@ -178,7 +178,7 @@ class FirstTimeHomeScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                const ChitSchemaScreen(initialTab: 1),
+                                const ChitSchemesScreen(initialTab: 1),
                           ),
                         );
                       },
@@ -580,7 +580,7 @@ class FirstTimeHomeScreen extends StatelessWidget {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              const ChitSchemaScreen(
+                                              const ChitSchemesScreen(
                                                 initialTab: 0,
                                               ),
                                         ),

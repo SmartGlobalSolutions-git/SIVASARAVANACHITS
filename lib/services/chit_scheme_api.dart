@@ -34,6 +34,9 @@ class ChitSchemeApiService {
         body: requestBody,
       );
 
+      print('--- CHIT SCHEMES API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is List) {
@@ -64,6 +67,9 @@ class ChitSchemeApiService {
         body: requestBody,
       );
 
+      print('--- CHIT SCHEME DETAIL API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
@@ -87,6 +93,9 @@ class ChitSchemeApiService {
         Uri.parse(ApiConstants.baseUrl),
         body: requestBody,
       );
+
+      print('--- AVAILABLE CHITS API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -115,6 +124,9 @@ class ChitSchemeApiService {
         Uri.parse(ApiConstants.baseUrl),
         body: requestBody,
       );
+
+      debugPrint('--- MY CHITS API RESPONSE ---');
+      debugPrint('RESPONSE: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
@@ -146,6 +158,9 @@ class ChitSchemeApiService {
         body: requestBody,
       );
 
+      print('--- CHIT STATEMENT API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
         if (decoded is Map && decoded['status'] == true && decoded['data'] != null) {
@@ -175,6 +190,9 @@ class ChitSchemeApiService {
         Uri.parse(ApiConstants.baseUrl),
         body: requestBody,
       );
+
+      print('--- PASSBOOK STATEMENT API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);

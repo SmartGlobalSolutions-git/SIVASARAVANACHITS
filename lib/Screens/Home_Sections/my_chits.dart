@@ -11,7 +11,8 @@ import '../../services/profile_view_api.dart';
 
 class MyChitsScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
-  const MyChitsScreen({super.key, this.onBackToHome});
+  final VoidCallback? onMenuTap;
+  const MyChitsScreen({super.key, this.onBackToHome, this.onMenuTap});
 
   @override
   State<MyChitsScreen> createState() => _MyChitsScreenState();
@@ -86,12 +87,10 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.w),
+          icon: Icon(Icons.menu, color: Colors.black, size: 24.w),
           onPressed: () {
-            if (widget.onBackToHome != null) {
-              widget.onBackToHome!();
-            } else {
-              Navigator.pop(context);
+            if (widget.onMenuTap != null) {
+              widget.onMenuTap!();
             }
           },
         ),
@@ -100,8 +99,8 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
           'My Chits',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
@@ -184,8 +183,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
   }
 
   Widget _buildChitCard(BuildContext context, dynamic chitItem) {
-    bool isPrized =
-        chitItem['Chit Status']?.toString().toLowerCase() == 'prized';
+    bool isPrized = chitItem['Status']?.toString().toLowerCase() == 'prized';
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -209,7 +207,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
               // Icon and Active status
               Container(
                 width: 70.w,
-                padding: EdgeInsets.symmetric(vertical: 5.h),
+                padding: EdgeInsets.symmetric(vertical: 6.h),
                 decoration: BoxDecoration(
                   color: Color(0x33018F46),
                   borderRadius: BorderRadius.only(
@@ -220,13 +218,13 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                   children: [
                     Image.asset(
                       'assets/images/chit_group.png',
-                      height: 30.h,
-                      width: 30.w,
+                      height: 28.h,
+                      width: 28.w,
                     ),
                     SizedBox(height: 2.h),
                     Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
+                        horizontal: 5.w,
                         vertical: 2.h,
                       ),
                       decoration: BoxDecoration(
@@ -234,9 +232,12 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         borderRadius: BorderRadius.circular(10.r),
                       ),
                       child: Text(
-                        chitItem['Status']?.toString().toUpperCase() ??
-                            'ACTIVE',
-                        style: TextStyle(color: Colors.white, fontSize: 8.sp, fontWeight: FontWeight.w600),
+                        chitItem['Chit Status']?.toString().toUpperCase() ?? '',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 7.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -251,9 +252,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _userName.isNotEmpty
-                            ? _userName
-                            : (chitItem['Chit Name']?.toString() ?? 'Unknown'),
+                        "${_userName.isNotEmpty ? _userName : (chitItem['Chit Name']?.toString() ?? '')} - ${chitItem['Chit_id']?.toString() ?? ''}",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13.sp,
@@ -270,7 +269,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                             ),
                           ),
                           Text(
-                            chitItem['Chit_id']?.toString() ?? '',
+                            chitItem['Group Name']?.toString() ?? '',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 14.sp,
@@ -286,7 +285,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
               Padding(
                 padding: EdgeInsets.only(top: 10.h, right: 10.w),
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                  padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 2.h),
                   decoration: BoxDecoration(
                     color: isPrized
                         ? const Color(0xFFCED6F9)
@@ -302,8 +301,8 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 6.w,
-                        height: 6.w,
+                        width: 4.w,
+                        height: 4.w,
                         decoration: BoxDecoration(
                           color: isPrized
                               ? const Color(0xFF22378A)
@@ -315,14 +314,13 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                       Text(
                         isPrized
                             ? 'Prized'
-                            : chitItem['Chit Status']?.toString() ??
-                                  'Non-prized',
+                            : chitItem['Status']?.toString() ?? '',
                         style: TextStyle(
                           color: isPrized
                               ? const Color(0xFF22378A)
                               : const Color(0xFFD9AB07),
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -346,7 +344,11 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                       children: [
                         Text(
                           'Chit Value',
-                          style: TextStyle(color: Color(0xFF475569), fontSize: 12.sp, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
@@ -364,11 +366,15 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                       children: [
                         Text(
                           'Start Date',
-                          style: TextStyle(color: Color(0xFF475569), fontSize: 12.sp, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          _formatDate(chitItem['Sdate']),
+                          _formatDate(chitItem['Start Date']),
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14.sp,
@@ -382,11 +388,15 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                       children: [
                         Text(
                           'End Date',
-                          style: TextStyle(color: Color(0xFF475569), fontSize: 12.sp, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                            color: Color(0xFF475569),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          _formatDate(chitItem['Ag_date']),
+                          _formatDate(chitItem['End Date']),
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14.sp,
@@ -404,7 +414,9 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          _showMiniStatementBottomSheet(context, chitItem);
+                        },
                         child: Text(
                           'Mini Statement',
                           style: TextStyle(
@@ -455,6 +467,331 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showMiniStatementBottomSheet(BuildContext context, dynamic chitItem) {
+    // Dummy data matching the design provided
+    final List<Map<String, dynamic>> statementData = [
+      {
+        "date": "01-10-2024",
+        "due": "1",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-10-2024",
+        "due": "2",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-11-2024",
+        "due": "3",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-12-2024",
+        "due": "4",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-01-2025",
+        "due": "5",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-01-2025",
+        "due": "6",
+        "dueAmt": 0,
+        "divi": 0,
+        "actualDue": 0,
+        "balance": 0,
+      },
+      {
+        "date": "01-02-2025",
+        "due": "7",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-03-2025",
+        "due": "8",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+      {
+        "date": "01-03-2025",
+        "due": "9",
+        "dueAmt": 0,
+        "divi": 0,
+        "actualDue": 0,
+        "balance": 0,
+      },
+      {
+        "date": "01-04-2025",
+        "due": "10",
+        "dueAmt": 0,
+        "divi": -25000,
+        "actualDue": 25000,
+        "balance": 25000,
+      },
+    ];
+
+    String groupCode = chitItem['Chit_id']?.toString() ?? '';
+    String chitValue = _formatAmount(chitItem['Chit Value']);
+    String name = _userName.isNotEmpty
+        ? _userName
+        : (chitItem['Chit Name']?.toString() ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          height: 450.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20.r),
+              topRight: Radius.circular(20.r),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Header & Drag Handle
+              SizedBox(height: 12.h),
+              Center(
+                child: Container(
+                  width: 50.w,
+                  height: 5.h,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2.5.r),
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  icon: Icon(Icons.close, color: Colors.grey[500], size: 24.sp),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+
+              // Title Area
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Mini Statement',
+                          style: TextStyle(
+                            fontSize: 22.sp,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Inter',
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20.r),
+                            border: Border.all(color: const Color(0xFF0C8A4B)),
+                          ),
+                          child: Text(
+                            'Group $groupCode',
+                            style: TextStyle(
+                              color: const Color(0xFF0C8A4B),
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Inter',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      'Group Code: $groupCode • $name • Chit Value: ₹ $chitValue',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: const Color(0xFF64748B),
+                        fontFamily: 'Inter',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // Table Header
+              Container(
+                color: const Color(0xFFF8FAFC),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Text('DATE', style: _tableHeaderStyle()),
+                    ),
+                    Expanded(
+                      flex: 1,
+                      child: Text('DUE', style: _tableHeaderStyle()),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'DUE AMT',
+                        textAlign: TextAlign.right,
+                        style: _tableHeaderStyle(),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'DIVI',
+                        textAlign: TextAlign.right,
+                        style: _tableHeaderStyle(),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        'ACTUAL DUE',
+                        textAlign: TextAlign.right,
+                        style: _tableHeaderStyle(),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'BALANCE',
+                        textAlign: TextAlign.right,
+                        style: _tableHeaderStyle(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Table Body
+              Expanded(
+                child: ListView.separated(
+                  itemCount: statementData.length,
+                  separatorBuilder: (context, index) =>
+                      Divider(height: 1.h, color: const Color(0xFFF1F5F9)),
+                  itemBuilder: (context, index) {
+                    final row = statementData[index];
+                    final balance = row['balance'] as int;
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 3,
+                            child: Text(row['date'], style: _tableRowStyle()),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(row['due'], style: _tableRowStyle()),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              row['dueAmt'].toString(),
+                              textAlign: TextAlign.right,
+                              style: _tableRowStyle(),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              row['divi'].toString(),
+                              textAlign: TextAlign.right,
+                              style: _tableRowStyle(),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text(
+                              row['actualDue'].toString(),
+                              textAlign: TextAlign.right,
+                              style: _tableRowStyle(isBold: true),
+                            ),
+                          ),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              balance.toString(),
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.bold,
+                                color: balance > 0
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFF0C8A4B),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  TextStyle _tableHeaderStyle() {
+    return TextStyle(
+      fontSize: 10.sp,
+      fontWeight: FontWeight.bold,
+      color: const Color(0xFF64748B),
+      fontFamily: 'Inter',
+    );
+  }
+
+  TextStyle _tableRowStyle({bool isBold = false}) {
+    return TextStyle(
+      fontSize: 12.sp,
+      fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+      color: const Color(0xFF334155),
+      fontFamily: 'Inter',
     );
   }
 }

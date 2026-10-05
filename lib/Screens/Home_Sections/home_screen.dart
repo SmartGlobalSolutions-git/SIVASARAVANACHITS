@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
+import 'package:siva_saravana/Screens/settings_sections/about_us.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import '../../constants/app_colors.dart';
 import '../../widgets/chit_enquiry.dart';
-import '../chit_schemes/chitschema.dart';
+import '../chit_schemes/chit_schemes.dart';
 import 'need_help_screen.dart';
 import '../settings_sections/faq.dart';
 import '../../services/profile_view_api.dart';
@@ -208,7 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const ChitSchemaScreen(initialTab: 1),
+                                    const ChitSchemesScreen(initialTab: 1),
                               ),
                             );
                           },
@@ -226,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const ChitSchemaScreen(initialTab: 0),
+                                    const ChitSchemesScreen(initialTab: 0),
                               ),
                             );
                           },
@@ -298,6 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         fontSize: 12.sp,
                                       ),
                                     ),
+                                    SizedBox(height: 5.h),
                                   ],
                                 ),
                               ],
@@ -770,7 +772,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  const ChitSchemaScreen(
+                                                  const ChitSchemesScreen(
                                                     initialTab: 0,
                                                   ),
                                             ),
@@ -859,6 +861,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         "assets/home_images/quick_link1.png",
                         'About Siva Saravana Chits ( P ) LTD',
                         'About Siva Saravana Chits ( P ) LTD',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AboutUsScreen(),
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(height: 15.h),
                       _buildQuickLinkCard(

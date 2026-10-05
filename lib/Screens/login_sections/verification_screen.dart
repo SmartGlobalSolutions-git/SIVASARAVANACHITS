@@ -185,7 +185,6 @@ class _VerificationScreenState extends State<VerificationScreen>
               // 2. Scrollable Verification Document Cards
               Expanded(
                 child: ListView(
-                  physics: const BouncingScrollPhysics(),
                   padding: EdgeInsets.only(
                     left: 16.w,
                     right: 16.w,

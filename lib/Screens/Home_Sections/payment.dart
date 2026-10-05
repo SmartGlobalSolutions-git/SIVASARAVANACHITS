@@ -32,8 +32,9 @@ class AppColors {
 
 class PaymentScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
+  final VoidCallback? onMenuTap;
 
-  const PaymentScreen({Key? key, this.onBackToHome}) : super(key: key);
+  const PaymentScreen({Key? key, this.onBackToHome, this.onMenuTap}) : super(key: key);
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -53,13 +54,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
         elevation: 0,
         leading: GestureDetector(
           onTap: () {
-            if (widget.onBackToHome != null) {
-              widget.onBackToHome!();
-            } else {
-              Navigator.pop(context);
+            if (widget.onMenuTap != null) {
+              widget.onMenuTap!();
             }
           },
-          child: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          child: const Icon(Icons.menu, color: AppColors.textDark),
         ),
         titleSpacing: 0,
         surfaceTintColor: Colors.transparent,
@@ -67,8 +66,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
           'Payment',
           style: TextStyle(
             color: AppColors.textDark,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w500,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),

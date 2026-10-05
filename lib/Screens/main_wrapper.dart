@@ -37,6 +37,7 @@ class _MainWrapperState extends State<MainWrapper> {
         },
       ),
       MyChitsScreen(
+        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         onBackToHome: () {
           setState(() {
             _currentIndex = 0;
@@ -44,6 +45,7 @@ class _MainWrapperState extends State<MainWrapper> {
         },
       ),
       PaymentScreen(
+        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         onBackToHome: () {
           setState(() {
             _currentIndex = 0;
@@ -51,6 +53,7 @@ class _MainWrapperState extends State<MainWrapper> {
         },
       ),
       PassbookScreen(
+        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         onBackToHome: () {
           setState(() {
             _currentIndex = 0;
@@ -66,6 +69,10 @@ class _MainWrapperState extends State<MainWrapper> {
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, result) {
         if (!didPop) {
+          if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+            _scaffoldKey.currentState?.closeDrawer();
+            return;
+          }
           setState(() {
             _currentIndex = 0;
           });
