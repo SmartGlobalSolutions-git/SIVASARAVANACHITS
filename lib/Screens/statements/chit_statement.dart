@@ -242,8 +242,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
           _buildHeaderCell('DIVIDEND', width: 80),
           _buildHeaderCell('DEBIT', width: 80),
           _buildHeaderCell('CREDIT', width: 80),
-          _buildHeaderCell('BALANCE', width: 80),
-          _buildHeaderCell('RECEIPT NO.', width: 80, isLast: true),
+          _buildHeaderCell('BALANCE', width: 80, isLast: true),
         ],
       ),
     );
@@ -290,8 +289,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
           _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['dividend']), width: 80),
           _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['debit']), width: 80),
           _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['credit']), width: 80),
-          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['balance']), width: 80, isBold: true, isInstallment: true),
-          _buildDataCell(isEmptyRow ? '' : (entry['recid']?.toString() ?? ''), width: 80, isLast: true),
+          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['balance']), width: 80, isBold: true, isInstallment: true, isLast: true),
         ],
       ),
     );

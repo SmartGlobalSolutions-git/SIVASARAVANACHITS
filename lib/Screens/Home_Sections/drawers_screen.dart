@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'package:siva_saravana/Screens/Prebitting/prebitting.dart';
-import 'package:siva_saravana/Screens/login_sections/verification_screen.dart';
 import 'package:siva_saravana/Screens/reward/reward.dart';
 import 'package:siva_saravana/Screens/growth_plan/calculator_screen.dart';
 import 'package:siva_saravana/Screens/growth_plan/chatbot_screen.dart';
-import 'package:siva_saravana/Screens/surety/surety.dart';
 import 'package:siva_saravana/Screens/settings_sections/profile_screen.dart';
 import 'package:siva_saravana/Screens/settings_sections/setting_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/payment.dart';
@@ -145,6 +142,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
                         child: Column(
                           children: [
                             SizedBox(height: 10.h),
+                            if (!widget.isFirstTimeUser)
                             _buildDrawerItem('assets/drawer/profile.png', 'Profile',
                             onTap: () {
                                 Navigator.push(
@@ -171,16 +169,6 @@ class _DrawersScreenState extends State<DrawersScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(builder: (context) => const CalculatorScreen()),
-                                );
-                              },
-                            ),
-                            _buildDrawerItem(
-                              'assets/drawer/verification.png',
-                              'Verification',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const VerificationScreen()),
                                 );
                               },
                             ),
@@ -215,14 +203,6 @@ class _DrawersScreenState extends State<DrawersScreen> {
                                     MaterialPageRoute(builder: (context) => const PrebiddingListScreen()),
                                   );
                                 },
-                              ),
-                              _buildDrawerItem('assets/drawer/surety.png', 'Surety', 
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const SuretyScreen()),
-                                );
-                              }
                               ),
                               _buildDrawerItem(
                                 'assets/drawer/statement.png',

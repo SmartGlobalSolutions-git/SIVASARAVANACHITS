@@ -7,7 +7,8 @@ import 'package:siva_saravana/services/profile_view_api.dart';
 
 class NeedHelpScreen extends StatefulWidget {
   final VoidCallback? onBackTap;
-  const NeedHelpScreen({super.key, this.onBackTap});
+  final VoidCallback? onMenuTap;
+  const NeedHelpScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<NeedHelpScreen> createState() => _NeedHelpScreenState();
@@ -43,9 +44,11 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.w),
+          icon: Icon(widget.onMenuTap != null ? Icons.menu : Icons.arrow_back, color: Colors.black, size: 24.w),
           onPressed: () {
-            if (widget.onBackTap != null) {
+            if (widget.onMenuTap != null) {
+              widget.onMenuTap!();
+            } else if (widget.onBackTap != null) {
               widget.onBackTap!();
             } else {
               Navigator.pop(context);

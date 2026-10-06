@@ -119,7 +119,7 @@ class AppColors {
   static const Color profilePhoneAndCode = Color(0xFF000000);
 
   /// Background color for personal info icons (rgba(160, 253, 170, 0.36))
-  static const Color profileIconBg = Color.fromRGBO(160, 253, 170, 0.36);
+  static const Color profileIconBg = Color(0x5CA0FDAA);
 
   /// Personal information item title color (#111827)
   static const Color profileItemTitle = Color(0xFF111827);

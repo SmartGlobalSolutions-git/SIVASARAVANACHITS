@@ -1221,6 +1221,8 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                     groupCode: widget.chitItem['Chit_id']?.toString() ?? '',
                     auctionDateTime: DateTime.now().add(const Duration(days: 1)),
                     lastAuctionAmount: double.tryParse(widget.chitItem['Prev Bid Amount']?.toString() ?? '0') ?? 0.0,
+                    chitId: widget.chitItem['Chit_id']?.toString() ?? '',
+                    grpId: widget.chitItem['group_id']?.toString() ?? '',
                   ),
                 ),
               );

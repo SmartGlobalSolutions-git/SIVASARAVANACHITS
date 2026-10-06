@@ -35,6 +35,7 @@ class _OtpScreenState extends State<OtpScreen> {
   Timer? _timer;
   int _secondsRemaining = 45;
   bool _canResend = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -88,11 +89,13 @@ class _OtpScreenState extends State<OtpScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Please enter all 6 digits of the OTP',
-            style: GoogleFonts.inter(fontSize: 13.sp),
+            'Please enter a valid OTP',
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              color: Colors.white,
+            ),
           ),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
       return;
@@ -100,6 +103,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     final response = await OtpApiService.verifyOtp(
@@ -126,16 +130,7 @@ class _OtpScreenState extends State<OtpScreen> {
       await SharedPrefsHelper.saveIsNewUser(widget.isNewUser);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            response['error_msg'] ?? 'OTP Verified Successfully!',
-            style: GoogleFonts.inter(fontSize: 13.sp),
-          ),
-          backgroundColor: AppColors.primary,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+
 
       Navigator.pushAndRemoveUntil(
         context,
@@ -147,15 +142,20 @@ class _OtpScreenState extends State<OtpScreen> {
         (route) => false,
       );
     } else {
+      setState(() {
+        _errorMessage = response?['error_msg'] ?? 'OTP Verification Failed';
+      });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            response?['error_msg'] ?? 'OTP Verification Failed',
-            style: GoogleFonts.inter(fontSize: 13.sp),
+            _errorMessage!,
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              color: Colors.white,
+            ),
           ),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
     }
@@ -309,6 +309,11 @@ class _OtpScreenState extends State<OtpScreen> {
                               contentPadding: EdgeInsets.zero,
                             ),
                             onChanged: (value) {
+                              if (_errorMessage != null) {
+                                setState(() {
+                                  _errorMessage = null;
+                                });
+                              }
                               if (value.isNotEmpty) {
                                 if (index < 5) {
                                   _focusNodes[index + 1].requestFocus();
@@ -324,6 +329,8 @@ class _OtpScreenState extends State<OtpScreen> {
                       );
                     }),
                   ),
+                  
+                  
 
                   SizedBox(height: 24.h),
 

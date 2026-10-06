@@ -26,7 +26,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _userName = 'Hello Akhil';
+  String _userName = '';
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final profile = response['profile'];
       if (profile != null && profile['name'] != null) {
         setState(() {
-          _userName = "Hello ${profile['name']}";
+          _userName = "${profile['name']}";
         });
       }
     }
@@ -268,8 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      children: [
+                                    
                                         Text(
                                           'Payment Due',
                                           style: TextStyle(
@@ -278,19 +277,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                             color: primaryColor,
                                           ),
                                         ),
-                                        SizedBox(width: 90.w),
-                                        GestureDetector(
-                                          onTap: () {},
-                                          child: Text(
-                                            'View Details >',
-                                            style: TextStyle(
-                                              color: primaryColor,
-                                              fontSize: 12.sp,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
                                     SizedBox(height: 3.h),
                                     Text(
                                       'You have 1 pending payment',

@@ -1,8 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import '../../services/prebid_api.dart';
 
 const Color kScreenBg = Color(0xFFF7F7F7);
 const Color kSectionCardBg = Color(0xFFFFFFFF);
@@ -49,8 +47,50 @@ const List<_TermsSectionData> _sections = [
 // ----------------------------------------------------------------------
 // SCREEN
 // ----------------------------------------------------------------------
-class TermsAndConditionsScreen extends StatelessWidget {
-  const TermsAndConditionsScreen({super.key});
+class TermsAndConditionsScreen extends StatefulWidget {
+  final String chitId;
+  final String amount;
+
+  const TermsAndConditionsScreen({
+    super.key,
+    required this.chitId,
+    required this.amount,
+  });
+
+  @override
+  State<TermsAndConditionsScreen> createState() => _TermsAndConditionsScreenState();
+}
+
+class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
+  bool _isLoading = false;
+
+  void _submitPrebid() async {
+    setState(() => _isLoading = true);
+    final response = await PrebidApiService.insertPrebid(widget.chitId, widget.amount);
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (response != null && response['error'] == false) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const VerificationSuccessDialog(),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            response?['message']?.toString() ??
+            response?['error_msg']?.toString() ??
+            'Something went wrong',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +151,7 @@ class TermsAndConditionsScreen extends StatelessWidget {
         width: double.infinity,
         height: 40.h,
         child: ElevatedButton(
-          onPressed: () => _showOtpBottomSheet(context),
+          onPressed: _isLoading ? null : _submitPrebid,
           style: ElevatedButton.styleFrom(
             backgroundColor: kAcceptButtonBg,
             elevation: 0,
@@ -119,26 +159,26 @@ class TermsAndConditionsScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(29.r),
             ),
           ),
-          child: Text(
-            'Accept and Continue',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 16.sp,
-              color: Colors.white,
-            ),
-          ),
+          child: _isLoading 
+            ? SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : Text(
+                'Accept and Continue',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.sp,
+                  color: Colors.white,
+                ),
+              ),
         ),
       ),
-    );
-  }
-
-  void _showOtpBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const OtpBottomSheet(),
     );
   }
 }
@@ -214,236 +254,6 @@ class _TermsSectionCard extends StatelessWidget {
 }
 
 // ----------------------------------------------------------------------
-// OTP BOTTOM SHEET
-// ----------------------------------------------------------------------
-class OtpBottomSheet extends StatefulWidget {
-  const OtpBottomSheet({super.key});
-
-  @override
-  State<OtpBottomSheet> createState() => _OtpBottomSheetState();
-}
-
-class _OtpBottomSheetState extends State<OtpBottomSheet> {
-  final List<TextEditingController> _controllers =
-  List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
-
-  Timer? _timer;
-  int _secondsLeft = 30;
-
-  @override
-  void initState() {
-    super.initState();
-    _startResendTimer();
-  }
-
-  void _startResendTimer() {
-    _secondsLeft = 30;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_secondsLeft == 0) {
-        t.cancel();
-      } else {
-        setState(() => _secondsLeft--);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
-    super.dispose();
-  }
-
-  bool get _isComplete =>
-      _controllers.every((c) => c.text.trim().isNotEmpty);
-
-  void _onDigitChanged(int index, String value) {
-    if (value.isNotEmpty && index < 5) {
-      _focusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
-    }
-    setState(() {});
-  }
-
-  void _onConfirm() {
-    if (!_isComplete) return;
-    Navigator.pop(context); // close the bottom sheet.
-    _showVerificationSuccessDialog(context);
-  }
-
-  void _showVerificationSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const VerificationSuccessDialog(),
-    );
-  }
-
-  String get _timerLabel {
-    final m = (_secondsLeft ~/ 60).toString().padLeft(2, '0');
-    final s = (_secondsLeft % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      // Push the sheet up above the keyboard.
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: Container(
-        padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 24.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Grabber handle.
-            Container(
-              width: 36.w,
-              height: 4.h,
-              margin: EdgeInsets.only(bottom: 16.h),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-            Text(
-              'OTP Verification',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 18.sp,
-                height: 1.0,
-                color: kOtpHeaderColor,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Enter the 6-digit code sent to +91 98XXX XXXXX',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontSize: 14.sp,
-                height: 1.0,
-                color: kOtpSubtitleColor,
-              ),
-            ),
-            SizedBox(height: 24.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(6, (i) => _buildDigitBox(i)),
-            ),
-            SizedBox(height: 16.h),
-            _secondsLeft > 0
-                ? Text(
-              "Didn't receive the code? Resend in $_timerLabel",
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontSize: 12.sp,
-                color: Colors.black54,
-              ),
-            )
-                : GestureDetector(
-              onTap: _startResendTimer,
-              child: Text(
-                'Resend code',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12.sp,
-                  color: kAcceptButtonBg,
-                ),
-              ),
-            ),
-            SizedBox(height: 24.h),
-            SizedBox(
-              width: 329,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isComplete ? _onConfirm : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kAcceptButtonBg,
-                  disabledBackgroundColor: kAcceptButtonBg.withValues(alpha: 0.4),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(7.35.r),
-                  ),
-                ),
-                child: Text(
-                  'Confirm',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16.sp,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDigitBox(int index) {
-    final bool isActive = _focusNodes[index].hasFocus ||
-        (_controllers[index].text.isEmpty &&
-            index == _controllers.indexWhere((c) => c.text.isEmpty));
-    return SizedBox(
-      width: 44.11.w,
-      height: 51.46.h,
-      child: TextField(
-        controller: _controllers[index],
-        focusNode: _focusNodes[index],
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        maxLength: 1,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        style: TextStyle(
-          fontFamily: 'Inter',
-          fontWeight: FontWeight.w600,
-          fontSize: 18.sp,
-          color: Colors.black,
-        ),
-        decoration: InputDecoration(
-          counterText: '',
-          contentPadding: EdgeInsets.zero,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.r),
-            borderSide: BorderSide(color: kOtpBoxBorderInactive, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.r),
-            borderSide: BorderSide(
-              color: isActive ? kOtpBoxBorderActive : kOtpBoxBorderInactive,
-              width: 2,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.r),
-            borderSide: BorderSide(color: kOtpBoxBorderActive, width: 2),
-          ),
-        ),
-        onChanged: (v) => _onDigitChanged(index, v),
-      ),
-    );
-  }
-}
-
-// ----------------------------------------------------------------------
 // VERIFICATION SUCCESSFUL — centered popup dialog.
 // ----------------------------------------------------------------------
 class VerificationSuccessDialog extends StatelessWidget {
@@ -466,24 +276,13 @@ class VerificationSuccessDialog extends StatelessWidget {
             ),
             SizedBox(height: 5.h),
             Text(
-              'Verification Successful',
+              'Prebid Successful',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w700,
                 fontSize: 18.sp,
                 color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Your account has been successfully\nverified.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontSize: 10.46.sp,
-                color: Color(0xff414752),
               ),
             ),
             SizedBox(height: 24.h),

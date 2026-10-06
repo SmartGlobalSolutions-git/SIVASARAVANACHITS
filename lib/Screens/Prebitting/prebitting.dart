@@ -282,6 +282,8 @@ class PrebidCard extends StatelessWidget {
                               const Duration(hours: 4),
                             ),
                             lastAuctionAmount: runBal,
+                            chitId: item['Chit_id']?.toString() ?? '',
+                            grpId: item['Group Id']?.toString() ?? '',
                           ),
                         ),
                       );

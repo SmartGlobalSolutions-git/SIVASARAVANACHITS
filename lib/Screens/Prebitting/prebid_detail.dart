@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Prebitting/terms_condition.dart';
+import '../../services/prebid_api.dart';
 
 const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kAuctionCardBg = Color(0xFFFFFCF0);
@@ -32,6 +33,8 @@ class PrebiddingDetailScreen extends StatefulWidget {
   final double lastAuctionAmount;
   final double minBid;
   final double maxBid;
+  final String chitId;
+  final String grpId;
 
   const PrebiddingDetailScreen({
     super.key,
@@ -41,6 +44,8 @@ class PrebiddingDetailScreen extends StatefulWidget {
     required this.lastAuctionAmount,
     this.minBid = 5000,
     this.maxBid = 300000,
+    this.chitId = '',
+    this.grpId = '',
   });
 
   @override
@@ -53,20 +58,46 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
   bool _agreedToTerms = true;
   Timer? _timer;
   Duration _remaining = Duration.zero;
+  Map<String, dynamic>? _apiData;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _amountController = TextEditingController(text: '25,000');
-    _tick();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    _fetchDetails();
+  }
+
+  Future<void> _fetchDetails() async {
+    final response = await PrebidApiService.fetchPrebidDetail(widget.chitId, widget.grpId);
+    if (mounted) {
+      setState(() {
+        _apiData = response;
+        _isLoading = false;
+        _tick();
+        _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+      });
+    }
   }
 
   void _tick() {
-    final diff = widget.auctionDateTime.difference(DateTime.now());
-    setState(() {
-      _remaining = diff.isNegative ? Duration.zero : diff;
-    });
+    if (_apiData != null && _apiData!['auction_datetime'] != null && _apiData!['auction_datetime'].toString().isNotEmpty) {
+      try {
+        final auctionTime = DateTime.parse(_apiData!['auction_datetime'].toString());
+        final diff = auctionTime.difference(DateTime.now());
+        setState(() {
+          _remaining = diff.isNegative ? Duration.zero : diff;
+        });
+      } catch (e) {
+        setState(() {
+          _remaining = Duration.zero;
+        });
+      }
+    } else {
+      setState(() {
+        _remaining = Duration.zero;
+      });
+    }
   }
 
   @override
@@ -77,14 +108,16 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
   }
 
   String _formatAmount(double v) {
-    final String s = v.toInt().toString();
+    final bool isNegative = v < 0;
+    final String s = v.abs().toInt().toString();
     final reversed = s.split('').reversed.toList();
     final buffer = StringBuffer();
     for (int i = 0; i < reversed.length; i++) {
       if (i != 0 && i % 3 == 0) buffer.write(',');
       buffer.write(reversed[i]);
     }
-    return buffer.toString().split('').reversed.join();
+    final String result = buffer.toString().split('').reversed.join();
+    return isNegative ? '-$result' : result;
   }
 
   bool get _isAuctionToday {
@@ -114,53 +147,55 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
     return Scaffold(
       backgroundColor: kScreenBg,
       appBar: _buildAppBar(context),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(16.w, 25.h, 16.w, 24.h),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCountdownRow(),
-            SizedBox(height: 24.h),
-            _buildAuctionDetailsCard(),
-            SizedBox(height: 16.h),
-            _buildRunningBalanceCard(),
-            SizedBox(height: 24.h),
-            Text(
-              'Pre-Bid Details',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w700,
-                fontSize: 16.sp,
-                color: kHeadingDark,
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(16.w, 25.h, 16.w, 24.h),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildCountdownRow(),
+                  SizedBox(height: 24.h),
+                  _buildAuctionDetailsCard(),
+                  SizedBox(height: 16.h),
+                  _buildRunningBalanceCard(),
+                  SizedBox(height: 24.h),
+                  Text(
+                    'Pre-Bid Details',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16.sp,
+                      color: kHeadingDark,
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'Enter Pre-Bid Amount',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14.sp,
+                      color: kInputLabelBrown,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  _buildAmountInput(),
+                  SizedBox(height: 6.h),
+                  Text(
+                    'Enter amount between ₹${_formatAmount(widget.minBid)} and ₹${_formatAmount(widget.maxBid)}',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12.sp,
+                      color: kInputLabelBrown,
+                    ),
+                  ),
+                  SizedBox(height: 24.h),
+                  _buildTermsCard(context),
+                ],
               ),
             ),
-            SizedBox(height: 12.h),
-            Text(
-              'Enter Pre-Bid Amount',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontSize: 14.sp,
-                color: kInputLabelBrown,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            _buildAmountInput(),
-            SizedBox(height: 6.h),
-            Text(
-              'Enter amount between ₹${_formatAmount(widget.minBid)} and ₹${_formatAmount(widget.maxBid)}',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontSize: 12.sp,
-                color: kInputLabelBrown,
-              ),
-            ),
-            SizedBox(height: 24.h),
-            _buildTermsCard(context),
-          ],
-        ),
-      ),
     );
   }
 
@@ -231,6 +266,22 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
 
   // ---------------------------- AUCTION DETAILS CARD ----------------------------
   Widget _buildAuctionDetailsCard() {
+    String auctionDate = '-';
+    String auctionTime = '-';
+    
+    if (_apiData != null && _apiData!['group'] != null) {
+      if (_apiData!['group']['sdate'] != null) {
+        try {
+          auctionDate = _formatDate(DateTime.parse(_apiData!['group']['sdate']));
+        } catch (_) {
+          auctionDate = _apiData!['group']['sdate'].toString();
+        }
+      }
+      if (_apiData!['group']['atime'] != null) {
+        auctionTime = _apiData!['group']['atime'].toString();
+      }
+    }
+
     return Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
@@ -276,7 +327,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        '12/08/2026',
+                        auctionDate,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12.sp,
@@ -298,7 +349,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        '6',
+                        _apiData?['chit_id']?.toString() ?? '-',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12.sp,
@@ -320,7 +371,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        '4:00 PM',
+                        auctionTime,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 12.sp,
@@ -336,6 +387,11 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
   }
 
   Widget _buildRunningBalanceCard() {
+    double rb = widget.lastAuctionAmount;
+    if (_apiData != null && _apiData!['running_balance'] != null) {
+      rb = double.tryParse(_apiData!['running_balance'].toString()) ?? widget.lastAuctionAmount;
+    }
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -369,7 +425,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
             ),
           ),
           Text(
-            '₹ ${_formatAmount(widget.lastAuctionAmount)}',
+            '₹ ${_formatAmount(rb)}',
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.bold,
@@ -545,9 +601,23 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
   }
 
   void _openTermsAndConditions(BuildContext context) {
+    if (_amountController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter bid amount', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return;
+    }
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => TermsAndConditionsScreen()),
+      MaterialPageRoute(builder: (_) => TermsAndConditionsScreen(
+        chitId: widget.chitId,
+        amount: _amountController.text.trim(),
+      )),
     );
   }
 }

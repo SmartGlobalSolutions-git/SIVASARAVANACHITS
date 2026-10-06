@@ -32,6 +32,7 @@ class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
       ),
       ChitSchemesScreen(
         initialTab: 0,
+        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         onBackTap: () {
           setState(() {
             _currentIndex = 0;
@@ -39,6 +40,7 @@ class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
         },
       ),
       NeedHelpScreen(
+        onMenuTap: () => _scaffoldKey.currentState?.openDrawer(),
         onBackTap: () {
           setState(() {
             _currentIndex = 0;
@@ -50,17 +52,31 @@ class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      drawer: const DrawersScreen(isFirstTimeUser: true),
-      body: _pages[_currentIndex],
-      bottomNavigationBar: FirstTimeBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
+            _scaffoldKey.currentState?.closeDrawer();
+            return;
+          }
           setState(() {
-            _currentIndex = index;
+            _currentIndex = 0;
           });
-        },
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        drawer: const DrawersScreen(isFirstTimeUser: true),
+        body: _pages[_currentIndex],
+        bottomNavigationBar: FirstTimeBottomNav(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
       ),
     );
   }

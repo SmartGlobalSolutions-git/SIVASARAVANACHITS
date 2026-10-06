@@ -9,7 +9,8 @@ import 'package:siva_saravana/widgets/chatbox_widget.dart';
 class ChitSchemesScreen extends StatefulWidget {
   final int initialTab;
   final VoidCallback? onBackTap;
-  const ChitSchemesScreen({super.key, this.initialTab = 0, this.onBackTap});
+  final VoidCallback? onMenuTap;
+  const ChitSchemesScreen({super.key, this.initialTab = 0, this.onBackTap, this.onMenuTap});
 
   @override
   State<ChitSchemesScreen> createState() => _ChitSchemesScreenState();
@@ -64,7 +65,9 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
             size: 24.sp,
           ),
           onPressed: () {
-            if (widget.onBackTap != null) {
+            if (widget.onMenuTap != null) {
+              widget.onMenuTap!();
+            } else if (widget.onBackTap != null) {
               widget.onBackTap!();
             } else {
               Navigator.maybePop(context);
@@ -345,20 +348,19 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
   }
 
   Widget _buildAvailableChitCard(dynamic item) {
-    final String chitValueStr = item['value']?.toString() ?? '200000';
-    final double chitValue = double.tryParse(chitValueStr) ?? 200000;
-    final int months = int.tryParse(item['nom']?.toString() ?? '20') ?? 20;
-
-    int years = months ~/ 12;
-    int remainingMonths = months % 12;
-    String durationStr = '';
-    if (years > 0) durationStr += '$years Year${years > 1 ? 's' : ''} ';
-    if (remainingMonths > 0) durationStr += '$remainingMonths Month${remainingMonths > 1 ? 's' : ''}';
-    durationStr = durationStr.trim();
-    if (durationStr.isEmpty) durationStr = '$months Months';
-
-    final double halfValue = chitValue / 2;
+    final String chitValueStr = item['value']?.toString() ?? '0';
+    final double chitValue = double.tryParse(chitValueStr) ?? 0;
     
+    final String durationStr = item['duration_text']?.toString() ?? '';
+    final String availableSlotsStr = item['bal_sub']?.toString() ?? '0';
+
+    final String halfTicketValueStr = item['value_half_ticket']?.toString() ?? '0';
+    final double halfTicketValue = double.tryParse(halfTicketValueStr) ?? 0;
+    final String halfTicketSlotsStr = item['bal_half_ticket']?.toString() ?? '0';
+
+    final String fullTicketSlotsStr = item['bal_full_ticket']?.toString() ?? '0';
+    final String totalMonthsStr = item['total_month']?.toString() ?? '0';
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w),
       decoration: BoxDecoration(
@@ -403,7 +405,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Total Months', style: TextStyle(fontSize: 8.sp, color: Colors.grey, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              Text('$months Months', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text('$totalMonthsStr Months', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
                             ],
                           ),
                         ),
@@ -439,7 +441,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Available Slots', style: TextStyle(fontSize: 8.sp, color: Colors.grey, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
-                              Text('10 Slots', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text('$availableSlotsStr Slots', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter'), maxLines: 1, overflow: TextOverflow.ellipsis),
                             ],
                           ),
                         ),
@@ -487,7 +489,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('½ Ticket', style: TextStyle(fontSize: 9.sp, color: Colors.grey, fontFamily: 'Inter')),
-                              Text('₹${_formatAmount(halfValue)}', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                              Text('₹${_formatAmount(halfTicketValue)}', style: TextStyle(fontSize: 11.sp, fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                             ],
                           ),
                         ),
@@ -497,7 +499,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             color: const Color(0xFFD6E8FC),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
-                          child: Text('8 Slots', style: TextStyle(fontSize: 9.sp, color: const Color(0xFF1B64B7), fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                          child: Text('$halfTicketSlotsStr Slots', style: TextStyle(fontSize: 9.sp, color: const Color(0xFF1B64B7), fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                         ),
                       ],
                     ),
@@ -531,7 +533,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             color: const Color(0xFFFBE4C6),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
-                          child: Text('2 Slots', style: TextStyle(fontSize: 9.sp, color: const Color(0xFFD98E04), fontWeight: FontWeight.bold, fontFamily: 'Inter')),
+                          child: Text('$fullTicketSlotsStr Slots', style: TextStyle(fontSize: 9.sp, color: const Color(0xFFD98E04), fontWeight: FontWeight.bold, fontFamily: 'Inter')),
                         ),
                       ],
                     ),

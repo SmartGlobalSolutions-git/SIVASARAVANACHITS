@@ -47,4 +47,87 @@ class PrebidApiService {
       return null;
     }
   }
+  static Future<Map<String, dynamic>?> fetchPrebidDetail(String chitId, String grpId) async {
+    try {
+      final String lt = await SharedPrefsHelper.getLatitude();
+      final String ln = await SharedPrefsHelper.getLongitude();
+      final String deviceId = await SharedPrefsHelper.getDeviceId();
+      final String? token = await SharedPrefsHelper.getToken();
+      final cusId = await SharedPrefsHelper.getCusId();
+
+      final Map<String, String> requestBody = {
+        'cid': ApiConstants.cid.toString(),
+        'lt': lt,
+        'ln': ln,
+        'device_id': deviceId,
+        'type': '5015',
+        'chit_id': chitId,
+        'grp_id': grpId,
+      };
+      
+      if (token != null) requestBody['token'] = token;
+      if (cusId != null) requestBody['cus_id'] = cusId.toString();
+
+      debugPrint('--- PREBID DETAIL API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      debugPrint('--- PREBID DETAIL API RESPONSE ---');
+      debugPrint('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Prebid Detail API Error: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> insertPrebid(String chitId, String amount) async {
+    try {
+      final String lt = await SharedPrefsHelper.getLatitude();
+      final String ln = await SharedPrefsHelper.getLongitude();
+      final String deviceId = await SharedPrefsHelper.getDeviceId();
+      final String? token = await SharedPrefsHelper.getToken();
+      final cusId = await SharedPrefsHelper.getCusId();
+
+      final Map<String, String> requestBody = {
+        'cid': ApiConstants.cid.toString(),
+        'lt': lt,
+        'ln': ln,
+        'device_id': deviceId,
+        'type': '5014',
+        'chit_id': chitId,
+        'amount': amount,
+      };
+      
+      if (token != null) requestBody['token'] = token;
+      if (cusId != null) requestBody['cus_id'] = cusId.toString();
+
+      debugPrint('--- INSERT PREBID API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      debugPrint('--- INSERT PREBID API RESPONSE ---');
+      debugPrint('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Insert Prebid API Error: $e');
+      return null;
+    }
+  }
 }

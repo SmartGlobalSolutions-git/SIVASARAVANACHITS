@@ -32,16 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter your mobile number';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter your mobile number',
-            style: GoogleFonts.inter(fontSize: 13.sp),
-          ),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
       return;
     }
 
@@ -49,16 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _errorMessage = 'Please enter a valid 10-digit mobile number';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Please enter a valid 10-digit mobile number',
-            style: GoogleFonts.inter(fontSize: 13.sp),
-          ),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
       return;
     }
 
@@ -94,10 +74,12 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(
           content: Text(
             _errorMessage!,
-            style: GoogleFonts.inter(fontSize: 13.sp),
+            style: GoogleFonts.inter(
+              fontSize: 14.sp,
+              color: Colors.white,
+            ),
           ),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
     }
@@ -109,7 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      resizeToAvoidBottomInset: false, // Prevents bottom button from jumping up when keyboard opens
+      resizeToAvoidBottomInset:
+          false, // Prevents bottom button from jumping up when keyboard opens
       body: Stack(
         children: [
           // 1. Watermark logo matching Figma inspector (Width: 420px, Height: 550px, Top: 408px, Left: 69px, Opacity: 8%)
@@ -222,8 +205,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       // Country Code Selector (+91)
                       Container(
-                        height: 40.h,
-                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10.w,
+                          vertical: 10.h,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8.r),
@@ -243,12 +228,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: const Color(0xFF1E1E1E),
                               ),
                             ),
-                            SizedBox(width: 4.w),
-                            const Icon(
-                              Icons.keyboard_arrow_down_rounded,
-                              color: Color(0xFF6B7280),
-                              size: 18,
-                            ),
                           ],
                         ),
                       ),
@@ -258,8 +237,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Phone input field with dash-formatted placeholder
                       Expanded(
                         child: Container(
-                          height: 40.h,
-                          padding: EdgeInsets.symmetric(horizontal: 14.w),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 14.w,
+                            vertical: 7.h,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(8.r),
@@ -295,12 +276,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 isDense: true,
                                 border: InputBorder.none,
-                                hintText: '-- ----- -----',
+                                hintText: 'Enter mobile number',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w400,
                                   color: const Color(0xFF9CA3AF),
-                                  letterSpacing: 1.5,
                                 ),
                               ),
                             ),
@@ -317,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         _errorMessage!,
                         style: GoogleFonts.inter(
-                          fontSize: 11.5.sp,
+                          fontSize: 12.sp,
                           color: Colors.redAccent,
                           fontWeight: FontWeight.w400,
                         ),
@@ -341,23 +321,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(68.r),
                         ),
                       ),
-                      child: _isLoading 
-                        ? SizedBox(
-                            width: 24.w,
-                            height: 24.w,
-                            child: const CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2.5,
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 24.w,
+                              height: 24.w,
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Text(
+                              'Get OTP',
+                              style: GoogleFonts.inter(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.3,
+                              ),
                             ),
-                          )
-                        : Text(
-                            'Get OTP',
-                            style: GoogleFonts.inter(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
                     ),
                   ),
 
