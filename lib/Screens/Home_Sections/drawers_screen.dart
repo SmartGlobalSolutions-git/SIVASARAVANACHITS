@@ -9,6 +9,7 @@ import 'package:siva_saravana/Screens/settings_sections/setting_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/payment.dart';
 import 'package:siva_saravana/Screens/Home_Sections/passbook.dart';
 import 'package:siva_saravana/Screens/statements/statement.dart';
+import 'package:siva_saravana/Screens/Home_Sections/family_chit.dart';
 import 'package:siva_saravana/services/profile_view_api.dart';
 
 class DrawersScreen extends StatefulWidget {
@@ -211,6 +212,16 @@ class _DrawersScreenState extends State<DrawersScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(builder: (context) => const StatementScreen()),
+                                  );
+                                },
+                              ),
+                              _buildDrawerItem(
+                                'assets/drawer/profile.png',
+                                'Family Chit',
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => const FamilyChitScreen()),
                                   );
                                 },
                               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/prebid_api.dart';
+import '../Home_Sections/drawers_screen.dart';
 
 const Color kScreenBg = Color(0xFFF7F7F7);
 const Color kSectionCardBg = Color(0xFFFFFFFF);
@@ -50,11 +51,19 @@ const List<_TermsSectionData> _sections = [
 class TermsAndConditionsScreen extends StatefulWidget {
   final String chitId;
   final String amount;
+  final String groupName;
+  final String bidderName;
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
 
   const TermsAndConditionsScreen({
     super.key,
     required this.chitId,
     required this.amount,
+    required this.groupName,
+    required this.bidderName,
+    this.onBackTap,
+    this.onMenuTap,
   });
 
   @override
@@ -62,11 +71,13 @@ class TermsAndConditionsScreen extends StatefulWidget {
 }
 
 class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool _isLoading = false;
 
   void _submitPrebid() async {
     setState(() => _isLoading = true);
-    final response = await PrebidApiService.insertPrebid(widget.chitId, widget.amount);
+    final response = await PrebidApiService.insertPrebid(widget.chitId, widget.amount, widget.groupName, widget.bidderName);
     if (!mounted) return;
     setState(() => _isLoading = false);
 
@@ -94,23 +105,46 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kScreenBg,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 20.sp),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: kScreenBg,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
         title: Text(
           'Terms & Condition',
           style: TextStyle(
             fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
             fontSize: 16.sp,
             color: Colors.black,
           ),
@@ -129,7 +163,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
           _buildFixedFooter(context),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildFixedFooter(BuildContext context) {

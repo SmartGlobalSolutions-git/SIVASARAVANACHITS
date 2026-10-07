@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
-import 'subscription_plan_screen.dart';
+import '../chit_schemes/chit_schemes.dart';
+import '../Home_Sections/drawers_screen.dart';
 
 class CalculatorScreen extends StatefulWidget {
-  const CalculatorScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const CalculatorScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<CalculatorScreen> createState() => _CalculatorScreenState();
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   String _selectedScheme = 'Smart Savings Scheme';
-  final TextEditingController _investmentController =
-      TextEditingController(text: '1,00,000');
+  final TextEditingController _investmentController = TextEditingController();
   final TextEditingController _emiController = TextEditingController();
   String _selectedNoOfEmis = '20';
   String _selectedNoOfChitMembers = '20';
 
-  final List<String> _emiOptions = ['10', '12', '15', '20', '25', '30', '40', '50'];
-  final List<String> _chitMemberOptions = ['10', '12', '15', '20', '25', '30', '40', '50'];
+  final List<String> _emiOptions = ['20', '30', '40'];
+  final List<String> _chitMemberOptions = ['20', '30', '40'];
 
   @override
   void dispose() {
@@ -28,15 +32,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  void _navigateToSubscriptionPlan() {
+  void _navigateToChitSchemes() {
+    Map<String, String> growthParams = {
+      'ch_value': _investmentController.text.trim(),
+      'emi_amount': _emiController.text.trim(),
+      'no_of_emis': _selectedNoOfEmis,
+      'no_of_members': _selectedNoOfChitMembers,
+    };
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SubscriptionPlanScreen(
-          investmentAmount: _investmentController.text.trim().isEmpty
-              ? '1,00,000'
-              : _investmentController.text.trim(),
-          durationMonths: _selectedNoOfEmis,
+        builder: (context) => ChitSchemesScreen(
+          initialTab: 0,
+          growthPlanParams: growthParams,
         ),
       ),
     );
@@ -48,25 +56,47 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final double scaleW = screenSize.width / 360.0;
     final double scaleH = screenSize.height / 800.0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FB),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        toolbarHeight: 56 * scaleH.clamp(0.85, 1.2),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF7F9FB),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleSpacing: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.menu, color: Colors.black87),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
         title: Text(
           'Calculator',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
-            fontSize: 16 * scaleW.clamp(0.85, 1.2),
-            fontWeight: FontWeight.w400,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
             fontStyle: FontStyle.normal,
             letterSpacing: 0,
             height: 1.0,
@@ -148,17 +178,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                             SizedBox(height: 14 * scaleH.clamp(0.85, 1.2)),
 
                             // Radio Selection
-                            Wrap(
-                              spacing: 12 * scaleW.clamp(0.85, 1.1),
-                              runSpacing: 8 * scaleH.clamp(0.85, 1.2),
-                              crossAxisAlignment: WrapCrossAlignment.center,
+                            Row(
                               children: [
                                 _buildRadioButton('Smart Savings Scheme', scaleW),
+                                SizedBox(width: 16 * scaleW.clamp(0.85, 1.2)),
+                                _buildRadioButton('Quick Cash', scaleW),
+                              ],
+                            ),
+                            SizedBox(height: 10 * scaleH.clamp(0.85, 1.2)),
+                            Row(
+                              children: [
                                 _buildRadioButton('Flexi Cash', scaleW),
                               ],
                             ),
-                            SizedBox(height: 8 * scaleH.clamp(0.85, 1.2)),
-                            _buildRadioButton('Quick Cash', scaleW),
                             SizedBox(height: 14 * scaleH.clamp(0.85, 1.2)),
 
                             // White Box (width: 328, height: 318, top: 203px, left: 17px, border: 1px solid #E9E9E9)
@@ -404,7 +436,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                               height: 42 * scaleH.clamp(0.85, 1.2),
                                               child: ElevatedButton(
                                                 onPressed:
-                                                    _navigateToSubscriptionPlan,
+                                                    _navigateToChitSchemes,
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor:
                                                       const Color(0xFF018F46),
@@ -449,7 +481,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           const ChatboxWidget(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildRadioButton(String title, double scaleW) {
@@ -463,39 +495,20 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 16 * scaleW.clamp(0.85, 1.2),
-            height: 16 * scaleW.clamp(0.85, 1.2),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isSelected ? Colors.transparent : Colors.white24,
-              border: Border.all(
-                color: isSelected ? Colors.white : Colors.white60,
-                width: 2,
-              ),
-            ),
-            child: isSelected
-                ? Center(
-                    child: Container(
-                      width: 6 * scaleW.clamp(0.85, 1.2),
-                      height: 6 * scaleW.clamp(0.85, 1.2),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : null,
+          Icon(
+            isSelected ? Icons.circle_outlined : Icons.circle,
+            color: isSelected ? Colors.white : const Color(0xFFE2E2E2),
+            size: 15 * scaleW.clamp(0.85, 1.2),
           ),
           SizedBox(width: 6 * scaleW.clamp(0.85, 1.1)),
           Text(
             title,
             style: GoogleFonts.inter(
-              fontSize: 13.5 * scaleW.clamp(0.85, 1.1),
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              fontSize: 13 * scaleW.clamp(0.85, 1.1),
+              fontWeight: FontWeight.w400,
               color: isSelected
                   ? Colors.white
-                  : Colors.white.withValues(alpha: 0.85),
+                  : Colors.white.withOpacity(0.5),
             ),
           ),
         ],
@@ -511,22 +524,22 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     required double scaleH,
   }) {
     return Container(
-      height: 38 * scaleH.clamp(0.85, 1.2),
+      height: 40 * scaleH.clamp(0.85, 1.2),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFE9E9E9),
+          color: Colors.grey.withOpacity(0.3),
           width: 1,
         ),
       ),
       alignment: Alignment.centerLeft,
-      padding: EdgeInsets.symmetric(horizontal: 10 * scaleW.clamp(0.85, 1.2)),
+      padding: EdgeInsets.symmetric(horizontal: 12 * scaleW.clamp(0.85, 1.2)),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
         style: GoogleFonts.inriaSans(
-          fontSize: 14 * scaleW.clamp(0.85, 1.2),
+          fontSize: 13 * scaleW.clamp(0.85, 1.2),
           fontWeight: FontWeight.w400,
           color: const Color(0xFF333333),
         ),
@@ -535,9 +548,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           contentPadding: EdgeInsets.zero,
           hintText: hintText,
           hintStyle: GoogleFonts.inriaSans(
-            fontSize: 14 * scaleW.clamp(0.85, 1.2),
+            fontSize: 13 * scaleW.clamp(0.85, 1.2),
             fontWeight: FontWeight.w400,
-            color: const Color(0xFFBDBDBD),
+            color: Colors.grey[400],
           ),
           border: InputBorder.none,
         ),
@@ -558,7 +571,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: const Color(0xFFE9E9E9),
+          color: Colors.grey.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -568,15 +581,15 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down,
-            color: Color(0xFF888888),
-            size: 20,
+            color: Colors.grey,
+            size: 20 * scaleW.clamp(0.85, 1.2),
           ),
           style: GoogleFonts.inriaSans(
-            fontSize: 14 * scaleW.clamp(0.85, 1.2),
+            fontSize: 13 * scaleW.clamp(0.85, 1.2),
             fontWeight: FontWeight.w400,
-            color: const Color(0xFF333333),
+            color: Colors.grey[600],
           ),
           items: items.map((String item) {
             return DropdownMenuItem<String>(

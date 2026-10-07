@@ -471,307 +471,240 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
   }
 
   void _showMiniStatementBottomSheet(BuildContext context, dynamic chitItem) {
-    // Dummy data matching the design provided
-    final List<Map<String, dynamic>> statementData = [
-      {
-        "date": "01-10-2024",
-        "due": "1",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-10-2024",
-        "due": "2",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-11-2024",
-        "due": "3",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-12-2024",
-        "due": "4",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-01-2025",
-        "due": "5",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-01-2025",
-        "due": "6",
-        "dueAmt": 0,
-        "divi": 0,
-        "actualDue": 0,
-        "balance": 0,
-      },
-      {
-        "date": "01-02-2025",
-        "due": "7",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-03-2025",
-        "due": "8",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-      {
-        "date": "01-03-2025",
-        "due": "9",
-        "dueAmt": 0,
-        "divi": 0,
-        "actualDue": 0,
-        "balance": 0,
-      },
-      {
-        "date": "01-04-2025",
-        "due": "10",
-        "dueAmt": 0,
-        "divi": -25000,
-        "actualDue": 25000,
-        "balance": 25000,
-      },
-    ];
-
     String groupCode = chitItem['Chit_id']?.toString() ?? '';
     String chitValue = _formatAmount(chitItem['Chit Value']);
     String name = _userName.isNotEmpty
         ? _userName
         : (chitItem['Chit Name']?.toString() ?? '');
 
+    int parsedChitId = int.tryParse(groupCode) ?? 0;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        return Container(
-          height: 450.h,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.r),
-              topRight: Radius.circular(20.r),
-            ),
-          ),
-          child: Column(
-            children: [
-              // Header & Drag Handle
-              SizedBox(height: 12.h),
-              Center(
-                child: Container(
-                  width: 50.w,
-                  height: 5.h,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2.5.r),
+        return FutureBuilder<List<dynamic>?>(
+          future: ChitSchemeApiService.fetchMiniStatement(parsedChitId),
+          builder: (context, snapshot) {
+            return Container(
+              height: 450.h,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20.r),
+                  topRight: Radius.circular(20.r),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Header & Drag Handle
+                  SizedBox(height: 12.h),
+                  Center(
+                    child: Container(
+                      width: 50.w,
+                      height: 5.h,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2.5.r),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  icon: Icon(Icons.close, color: Colors.grey[500], size: 24.sp),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: Icon(Icons.close, color: Colors.grey[500], size: 24.sp),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
 
-              // Title Area
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  // Title Area
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Mini Statement',
-                          style: TextStyle(
-                            fontSize: 22.sp,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Inter',
-                            color: const Color(0xFF1E293B),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 4.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20.r),
-                            border: Border.all(color: const Color(0xFF0C8A4B)),
-                          ),
-                          child: Text(
-                            'Group $groupCode',
-                            style: TextStyle(
-                              color: const Color(0xFF0C8A4B),
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Inter',
+                        Row(
+                          children: [
+                            Text(
+                              'Mini Statement',
+                              style: TextStyle(
+                                fontSize: 22.sp,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Inter',
+                                color: const Color(0xFF1E293B),
+                              ),
                             ),
+                            SizedBox(width: 12.w),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20.r),
+                                border: Border.all(color: const Color(0xFF0C8A4B)),
+                              ),
+                              child: Text(
+                                'Group $groupCode',
+                                style: TextStyle(
+                                  color: const Color(0xFF0C8A4B),
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          'Group Code: $groupCode • $name • Chit Value: ₹ $chitValue',
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: const Color(0xFF64748B),
+                            fontFamily: 'Inter',
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'Group Code: $groupCode • $name • Chit Value: ₹ $chitValue',
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: const Color(0xFF64748B),
-                        fontFamily: 'Inter',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 16.h),
+                  ),
+                  SizedBox(height: 16.h),
 
-              // Table Header
-              Container(
-                color: const Color(0xFFF8FAFC),
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text('DATE', style: _tableHeaderStyle()),
+                  // Table Header
+                  Container(
+                    color: const Color(0xFFF8FAFC),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: Text('DATE', style: _tableHeaderStyle()),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text('DUE', style: _tableHeaderStyle()),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'DUE AMT',
+                            textAlign: TextAlign.right,
+                            style: _tableHeaderStyle(),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'DIVI',
+                            textAlign: TextAlign.right,
+                            style: _tableHeaderStyle(),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'ACTUAL DUE',
+                            textAlign: TextAlign.right,
+                            style: _tableHeaderStyle(),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            'BALANCE',
+                            textAlign: TextAlign.right,
+                            style: _tableHeaderStyle(),
+                          ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      flex: 1,
-                      child: Text('DUE', style: _tableHeaderStyle()),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'DUE AMT',
-                        textAlign: TextAlign.right,
-                        style: _tableHeaderStyle(),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'DIVI',
-                        textAlign: TextAlign.right,
-                        style: _tableHeaderStyle(),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        'ACTUAL DUE',
-                        textAlign: TextAlign.right,
-                        style: _tableHeaderStyle(),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'BALANCE',
-                        textAlign: TextAlign.right,
-                        style: _tableHeaderStyle(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
 
-              // Table Body
-              Expanded(
-                child: ListView.separated(
-                  itemCount: statementData.length,
-                  separatorBuilder: (context, index) =>
-                      Divider(height: 1.h, color: const Color(0xFFF1F5F9)),
-                  itemBuilder: (context, index) {
-                    final row = statementData[index];
-                    final balance = row['balance'] as int;
-                    return Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.w,
-                        vertical: 12.h,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Text(row['date'], style: _tableRowStyle()),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Text(row['due'], style: _tableRowStyle()),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              row['dueAmt'].toString(),
-                              textAlign: TextAlign.right,
-                              style: _tableRowStyle(),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              row['divi'].toString(),
-                              textAlign: TextAlign.right,
-                              style: _tableRowStyle(),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              row['actualDue'].toString(),
-                              textAlign: TextAlign.right,
-                              style: _tableRowStyle(isBold: true),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              balance.toString(),
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.bold,
-                                color: balance > 0
-                                    ? const Color(0xFFDC2626)
-                                    : const Color(0xFF0C8A4B),
+                  // Table Body
+                  Expanded(
+                    child: snapshot.connectionState == ConnectionState.waiting
+                        ? const Center(child: CircularProgressIndicator())
+                        : snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No statement data available.',
+                                  style: TextStyle(color: Colors.grey, fontSize: 14.sp),
+                                ),
+                              )
+                            : ListView.separated(
+                                itemCount: snapshot.data!.length,
+                                separatorBuilder: (context, index) =>
+                                    Divider(height: 1.h, color: const Color(0xFFF1F5F9)),
+                                itemBuilder: (context, index) {
+                                  final row = snapshot.data![index];
+                                  final balance = double.tryParse(row['balance']?.toString() ?? '0') ?? 0;
+                                  
+                                  return Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 16.w,
+                                      vertical: 12.h,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          flex: 3,
+                                          child: Text(_formatDate(row['date']), style: _tableRowStyle()),
+                                        ),
+                                        Expanded(
+                                          flex: 1,
+                                          child: Text(row['due']?.toString() ?? '-', style: _tableRowStyle()),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            row['dueAmt']?.toString() ?? '-',
+                                            textAlign: TextAlign.right,
+                                            style: _tableRowStyle(),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            row['divi']?.toString() ?? '-',
+                                            textAlign: TextAlign.right,
+                                            style: _tableRowStyle(),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: Text(
+                                            row['actualDue']?.toString() ?? '-',
+                                            textAlign: TextAlign.right,
+                                            style: _tableRowStyle(isBold: true),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 2,
+                                          child: Text(
+                                            _formatAmount(balance),
+                                            textAlign: TextAlign.right,
+                                            style: TextStyle(
+                                              fontSize: 12.sp,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.bold,
+                                              color: balance > 0
+                                                  ? const Color(0xFFDC2626)
+                                                  : const Color(0xFF0C8A4B),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          }
         );
       },
     );

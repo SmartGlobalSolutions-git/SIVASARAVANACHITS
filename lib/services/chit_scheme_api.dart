@@ -109,6 +109,71 @@ class ChitSchemeApiService {
       return null;
     }
   }
+
+  // 5008 with scheme_id - Available Chit Detail
+  static Future<Map<String, dynamic>?> fetchAvailableChitDetail(int schemeId) async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      requestBody['type'] = '5008';
+      requestBody['scheme_id'] = schemeId.toString();
+
+      debugPrint('--- AVAILABLE CHIT DETAIL API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- AVAILABLE CHIT DETAIL API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['error'] == false && decoded['data'] != null) {
+          final data = decoded['data'];
+          if (data is List && data.isNotEmpty) {
+            return data[0];
+          }
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Available Chit Detail API Error: $e');
+      return null;
+    }
+  }
+  // 5011 - Plan Your Growth (Search Chits)
+  static Future<List<dynamic>?> fetchGrowthPlanChits(Map<String, String> searchParams) async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      requestBody['type'] = '5011';
+      requestBody.addAll(searchParams);
+
+      debugPrint('--- GROWTH PLAN API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- GROWTH PLAN API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['error'] == false) {
+          return decoded['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Growth Plan API Error: $e');
+      return null;
+    }
+  }
+
   // 5004 - My Chits
   static Future<List<dynamic>?> fetchMyChits() async {
     try {
@@ -163,8 +228,8 @@ class ChitSchemeApiService {
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        if (decoded is Map && decoded['status'] == true && decoded['data'] != null) {
-          return decoded['data'];
+        if (decoded is Map) {
+          return decoded as Map<String, dynamic>;
         }
       }
       return null;
@@ -196,13 +261,46 @@ class ChitSchemeApiService {
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(response.body);
-        if (decoded is Map && decoded['status'] == true && decoded['data'] != null) {
-          return decoded['data'];
+        if (decoded is Map) {
+          return decoded as Map<String, dynamic>;
         }
       }
       return null;
     } catch (e) {
       debugPrint('Passbook Statement API Error: $e');
+      return null;
+    }
+  }
+
+  // 5016 - Mini Statement
+  static Future<List<dynamic>?> fetchMiniStatement(int chitId) async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      final cusId = await SharedPrefsHelper.getCusId();
+      requestBody['type'] = '5016';
+      requestBody['chit_id'] = chitId.toString();
+      if (cusId != null) requestBody['cus_id'] = cusId.toString();
+
+      debugPrint('--- MINI STATEMENT API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- MINI STATEMENT API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['error'] == false && decoded['data'] != null) {
+          return decoded['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Mini Statement API Error: $e');
       return null;
     }
   }

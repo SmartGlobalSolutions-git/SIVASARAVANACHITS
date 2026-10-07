@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../Home_Sections/drawers_screen.dart';
 
 const Color kScreenBg = Color(0xFFF7F7F7);
 const Color kHeroTitleBase = Color(0xFF0B1A30);
@@ -74,34 +75,66 @@ const List<_StatCardData> _statCards = [
 // ----------------------------------------------------------------------
 // SCREEN
 // ----------------------------------------------------------------------
-class RewardsAchievementsScreen extends StatelessWidget {
-  const RewardsAchievementsScreen({super.key});
+class RewardsAchievementsScreen extends StatefulWidget {
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const RewardsAchievementsScreen({super.key, this.onBackTap, this.onMenuTap});
+
+  @override
+  State<RewardsAchievementsScreen> createState() => _RewardsAchievementsScreenState();
+}
+
+class _RewardsAchievementsScreenState extends State<RewardsAchievementsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kScreenBg,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: kScreenBg,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 20.sp),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Rewards & Achievements',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
-            fontSize: 16.sp,
-            height: 1.0,
-            color: const Color(0xFF040404),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: kScreenBg,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          title: Text(
+            'Rewards & Achievements',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
           ),
         ),
-      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 24.h),
         child: Column(
@@ -117,7 +150,7 @@ class RewardsAchievementsScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 
   // ---------------------------- HERO ----------------------------

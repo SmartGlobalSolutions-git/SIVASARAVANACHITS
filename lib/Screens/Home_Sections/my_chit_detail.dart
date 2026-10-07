@@ -10,16 +10,21 @@ import 'package:siva_saravana/Screens/Prebitting/prebid_detail.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'package:intl/intl.dart';
 import '../../services/profile_view_api.dart';
+import 'drawers_screen.dart';
 
 class MyChitDetailScreen extends StatefulWidget {
   final dynamic chitItem;
-  const MyChitDetailScreen({super.key, required this.chitItem});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const MyChitDetailScreen({super.key, required this.chitItem, this.onBackTap, this.onMenuTap});
 
   @override
   State<MyChitDetailScreen> createState() => _MyChitDetailScreenState();
 }
 
 class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   String _userName = '';
   Timer? _auctionTimer;
   Duration _timeLeft = Duration.zero;
@@ -129,24 +134,45 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
   Widget build(BuildContext context) {
     ScreenUtil.init(context);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F5),
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF3F3F5),
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.sp),
-          onPressed: () {
-            Navigator.maybePop(context);
-          },
-        ),
-        titleSpacing: 0,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF3F3F5),
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          titleSpacing: 0,
         title: Text(
           'Chits detail',
           style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
         ),
@@ -225,7 +251,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           const ChatboxWidget(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildChitHeaderCard() {

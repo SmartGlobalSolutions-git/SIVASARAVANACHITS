@@ -4,26 +4,67 @@ import 'package:siva_saravana/constants/app_colors.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'payment_method.dart';
 
-class ReviewPayScreen extends StatelessWidget {
-  const ReviewPayScreen({Key? key}) : super(key: key);
+import '../Home_Sections/drawers_screen.dart';
+
+class ReviewPayScreen extends StatefulWidget {
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const ReviewPayScreen({Key? key, this.onBackTap, this.onMenuTap}) : super(key: key);
+
+  @override
+  State<ReviewPayScreen> createState() => _ReviewPayScreenState();
+}
+
+class _ReviewPayScreenState extends State<ReviewPayScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F5),
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF3F3F5),
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        titleSpacing: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Review & Pay',
-          style: TextStyle(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.w500),
-        ),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF3F3F5),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleSpacing: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          title: Text(
+            'Review & Pay',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
+          ),
       ),
       body: Stack(
         children: [
@@ -154,7 +195,7 @@ class ReviewPayScreen extends StatelessWidget {
           const ChatboxWidget(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildChitSummaryItem(String chitAmount, String chitId, String dueAmount, String payingAmount) {

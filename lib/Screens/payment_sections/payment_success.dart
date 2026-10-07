@@ -2,26 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../main_wrapper.dart';
 
-class PaymentSuccessScreen extends StatelessWidget {
-  const PaymentSuccessScreen({Key? key}) : super(key: key);
+import '../Home_Sections/drawers_screen.dart';
+
+class PaymentSuccessScreen extends StatefulWidget {
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const PaymentSuccessScreen({Key? key, this.onBackTap, this.onMenuTap}) : super(key: key);
+
+  @override
+  State<PaymentSuccessScreen> createState() => _PaymentSuccessScreenState();
+}
+
+class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F5),
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF3F3F5),
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        titleSpacing: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Payment Submitted',
-          style: TextStyle(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.w500),
-        ),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF3F3F5),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          titleSpacing: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          title: Text(
+            'Payment Submitted',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
+          ),
       ),
       body: Column(
         children: [
@@ -190,7 +231,7 @@ class PaymentSuccessScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildSummaryRow(String label, String value, {bool isAmount = false}) {

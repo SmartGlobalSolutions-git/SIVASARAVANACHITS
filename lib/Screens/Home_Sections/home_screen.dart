@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
 import 'package:siva_saravana/Screens/settings_sections/about_us.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
+import 'package:siva_saravana/widgets/need_help_bottom_sheet.dart';
 import '../../constants/app_colors.dart';
 import '../../widgets/chit_enquiry.dart';
 import '../chit_schemes/chit_schemes.dart';
@@ -27,6 +28,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _userName = '';
+  
+  final TextEditingController _investmentController = TextEditingController();
+  final TextEditingController _emiAmountController = TextEditingController();
+  String _noOfEmis = '20';
+  String _noOfMembers = '20';
+
+  @override
+  void dispose() {
+    _investmentController.dispose();
+    _emiAmountController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -62,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: widget.onMenuTap ?? () {},
         ),
         title: Text(
-          _userName,
+          'Hello $_userName',
           style: TextStyle(
             color: Colors.black,
             fontSize: 14.sp,
@@ -396,8 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
-                              builder: (context) =>
-                                  _buildNeedHelpBottomSheet(context),
+                              builder: (context) => NeedHelpBottomSheet()
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -538,6 +550,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   child: TextField(
+                                    controller: _investmentController,
+                                    keyboardType: TextInputType.number,
                                     style: TextStyle(fontSize: 13.sp),
                                     decoration: InputDecoration(
                                       hintText: 'ex: 1,00,000',
@@ -588,6 +602,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   child: TextField(
+                                    controller: _emiAmountController,
+                                    keyboardType: TextInputType.number,
                                     style: TextStyle(fontSize: 13.sp),
                                     decoration: InputDecoration(
                                       hintText: 'ex: 1,00,000',
@@ -643,7 +659,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             child: DropdownButtonHideUnderline(
                                               child: DropdownButton<String>(
                                                 isExpanded: true,
-                                                value: '20',
+                                                value: _noOfEmis,
                                                 icon: Icon(
                                                   Icons.keyboard_arrow_down,
                                                   size: 20.w,
@@ -665,7 +681,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     ),
                                                   );
                                                 }).toList(),
-                                                onChanged: (_) {},
+                                                onChanged: (val) {
+                                                  if (val != null) setState(() => _noOfEmis = val);
+                                                },
                                               ),
                                             ),
                                           ),
@@ -703,7 +721,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             child: DropdownButtonHideUnderline(
                                               child: DropdownButton<String>(
                                                 isExpanded: true,
-                                                value: '20',
+                                                value: _noOfMembers,
                                                 icon: Icon(
                                                   Icons.keyboard_arrow_down,
                                                   size: 20.w,
@@ -725,7 +743,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     ),
                                                   );
                                                 }).toList(),
-                                                onChanged: (_) {},
+                                                onChanged: (val) {
+                                                  if (val != null) setState(() => _noOfMembers = val);
+                                                },
                                               ),
                                             ),
                                           ),
@@ -754,12 +774,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                       height: 35.h,
                                       child: ElevatedButton(
                                         onPressed: () {
+                                          Map<String, String> growthParams = {
+                                            'ch_value': _investmentController.text.trim(),
+                                            'emi_amount': _emiAmountController.text.trim(),
+                                            'no_of_emis': _noOfEmis,
+                                            'no_of_members': _noOfMembers,
+                                          };
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  const ChitSchemesScreen(
+                                                  ChitSchemesScreen(
                                                     initialTab: 0,
+                                                    growthPlanParams: growthParams,
                                                   ),
                                             ),
                                           );
@@ -1125,195 +1152,6 @@ class _HomeScreenState extends State<HomeScreen> {
           size: 12.w,
         ),
         onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildNeedHelpBottomSheet(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
-      ),
-      padding: EdgeInsets.all(20.w),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.close, size: 20.w, color: Colors.grey[600]),
-              ),
-            ),
-          ),
-          Text(
-            'Need help?',
-            style: TextStyle(
-              fontSize: 24.sp,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          SizedBox(height: 5.h),
-          Text(
-            'We\'re here to assist with your chit plans & queries.',
-            style: TextStyle(fontSize: 14.sp, color: Color(0xFF64748B)),
-          ),
-          SizedBox(height: 15.h),
-          _buildHelpCard(
-            icon: Icons.phone_outlined,
-            title: 'General Enquiry',
-            subtitle: 'Account, group & plan queries',
-            badgeText: '9 AM - 6 PM',
-            badgeColor: const Color(0xFFE6F4EA),
-            badgeTextColor: const Color(0xFF137333),
-            phoneNumber: '+91 90 4783 4783',
-          ),
-          SizedBox(height: 10.h),
-          _buildHelpCard(
-            icon: Icons.headset_mic_outlined,
-            title: 'Collection Support',
-            subtitle: 'Payment, dues & settlement',
-            badgeText: 'Priority',
-            badgeColor: Colors.grey[200]!,
-            badgeTextColor: Colors.grey[700]!,
-            phoneNumber: '+91 98 4329 9444',
-          ),
-          SizedBox(height: 10.h),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String badgeText,
-    required Color badgeColor,
-    required Color badgeTextColor,
-    required String phoneNumber,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Color(0xFFF1FBF9)),
-      ),
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.r),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
-                ),
-                child: Icon(icon, color: const Color(0xFF334155), size: 15.w),
-              ),
-              SizedBox(width: 10.w),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0F172A),
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: badgeColor,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Text(
-                  badgeText,
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    fontWeight: FontWeight.w600,
-                    color: badgeTextColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.h),
-            child: Divider(color: Color(0xFFE2E8F0), height: 1),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                phoneNumber,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF22378A), // Dark blue
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF059669), // Green
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 3.h,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Call', style: TextStyle(fontSize: 14.sp)),
-                    SizedBox(width: 4.w),
-                    Icon(Icons.arrow_forward, size: 16.w),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

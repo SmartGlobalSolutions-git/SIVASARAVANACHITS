@@ -2,10 +2,10 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'app_colors.dart';
 import 'profile_screen.dart';
 import 'setting_screen.dart';
-import 'help_and_support.dart';
 
 /// The navigation sidebar / drawer widget matching the app design,
 /// adapted for all screen sizes using flutter_screenutil and Inter font.
@@ -160,7 +160,7 @@ class Sidebar extends StatelessWidget {
                   Navigator.of(context).maybePop();
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const HelpAndSupportScreen(),
+                      builder: (context) => const NeedHelpScreen(),
                     ),
                   );
                 },

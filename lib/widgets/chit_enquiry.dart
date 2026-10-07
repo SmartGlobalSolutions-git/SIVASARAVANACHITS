@@ -1,9 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/chit_enquiry_api.dart';
 
-class ChitEnquirySheet extends StatelessWidget {
+class ChitEnquirySheet extends StatefulWidget {
   const ChitEnquirySheet({super.key});
+
+  @override
+  State<ChitEnquirySheet> createState() => _ChitEnquirySheetState();
+}
+
+class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _submitEnquiry() async {
+    final String name = _nameController.text.trim();
+    final String mobile = _mobileController.text.trim();
+    final String email = _emailController.text.trim();
+    final String message = _messageController.text.trim();
+
+    if (name.isEmpty || mobile.isEmpty || message.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill Name, Mobile Number, and Message fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final response = await ChitEnquiryApi.submitEnquiry(
+      name: name,
+      mobile: mobile,
+      email: email,
+      remarks: message,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (response['status'] == 'success') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? 'Enquiry submitted successfully')),
+      );
+      Navigator.pop(context); // Close the dialog
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? 'Submission failed')),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _mobileController.dispose();
+    _emailController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,13 +131,13 @@ class ChitEnquirySheet extends StatelessWidget {
             SizedBox(height: 24.h),
 
             // Form Fields
-            _buildInputField('Name', 'Enter your Name'),
+            _buildInputField('Name', 'Enter your Name', _nameController),
             SizedBox(height: 16.h),
-            _buildInputField('Mobile Number', 'Enter mobile number'),
+            _buildInputField('Mobile Number', 'Enter mobile number', _mobileController, keyboardType: TextInputType.phone),
             SizedBox(height: 16.h),
-            _buildInputField('Mail ID (Optional)', 'Enter mail ID'),
+            _buildInputField('Mail ID (Optional)', 'Enter mail ID', _emailController, keyboardType: TextInputType.emailAddress),
             SizedBox(height: 16.h),
-            _buildInputField('Message', 'Tell us your requirement', maxLines: 4),
+            _buildInputField('Message', 'Tell us your requirement', _messageController, maxLines: 4),
             SizedBox(height: 24.h),
 
             // Submit Button
@@ -82,9 +145,7 @@ class ChitEnquirySheet extends StatelessWidget {
               width: double.infinity,
               height: 48.h,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: _isLoading ? null : _submitEnquiry,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEAB308), // Yellow/Gold color
                   foregroundColor: Colors.black,
@@ -92,20 +153,29 @@ class ChitEnquirySheet extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Submit Enquiry',
-                      style: GoogleFonts.inter(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w700,
+                child: _isLoading
+                    ? SizedBox(
+                        height: 24.h,
+                        width: 24.h,
+                        child: const CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Submit Enquiry',
+                            style: GoogleFonts.inter(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Icon(Icons.arrow_forward, size: 20.w),
+                        ],
                       ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Icon(Icons.arrow_forward, size: 20.w),
-                  ],
-                ),
               ),
             ),
             SizedBox(height: 16.h),
@@ -125,7 +195,7 @@ class ChitEnquirySheet extends StatelessWidget {
     );
   }
 
-  Widget _buildInputField(String label, String hint, {int maxLines = 1}) {
+  Widget _buildInputField(String label, String hint, TextEditingController controller, {int maxLines = 1, TextInputType keyboardType = TextInputType.text}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -139,7 +209,9 @@ class ChitEnquirySheet extends StatelessWidget {
         ),
         SizedBox(height: 8.h),
         TextField(
+          controller: controller,
           maxLines: maxLines,
+          keyboardType: keyboardType,
           style: GoogleFonts.inter(fontSize: 14.sp),
           decoration: InputDecoration(
             hintText: hint,

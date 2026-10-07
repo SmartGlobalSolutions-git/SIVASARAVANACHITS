@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
+import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
 import 'package:siva_saravana/Screens/Prebitting/terms_condition.dart';
+import 'package:siva_saravana/constants/app_colors.dart';
 import '../../services/prebid_api.dart';
+import '../../services/profile_view_api.dart';
+import '../Home_Sections/drawers_screen.dart';
 
 const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kAuctionCardBg = Color(0xFFFFFCF0);
@@ -35,6 +40,8 @@ class PrebiddingDetailScreen extends StatefulWidget {
   final double maxBid;
   final String chitId;
   final String grpId;
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
 
   const PrebiddingDetailScreen({
     super.key,
@@ -46,6 +53,8 @@ class PrebiddingDetailScreen extends StatefulWidget {
     this.maxBid = 300000,
     this.chitId = '',
     this.grpId = '',
+    this.onBackTap,
+    this.onMenuTap,
   });
 
   @override
@@ -54,18 +63,31 @@ class PrebiddingDetailScreen extends StatefulWidget {
 }
 
 class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   late final TextEditingController _amountController;
   bool _agreedToTerms = true;
   Timer? _timer;
   Duration _remaining = Duration.zero;
   Map<String, dynamic>? _apiData;
   bool _isLoading = true;
+  String _bidderName = '';
 
   @override
   void initState() {
     super.initState();
-    _amountController = TextEditingController(text: '25,000');
+    _amountController = TextEditingController();
     _fetchDetails();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted && response != null && response['error'] == false && response['profile'] != null) {
+      setState(() {
+        _bidderName = response['profile']['name']?.toString() ?? '';
+      });
+    }
   }
 
   Future<void> _fetchDetails() async {
@@ -144,14 +166,31 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kScreenBg,
-      appBar: _buildAppBar(context),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator()) 
-          : SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(16.w, 25.h, 16.w, 24.h),
-              child: Column(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: kScreenBg,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: _buildAppBar(context),
+        body: _isLoading 
+            ? const Center(child: CircularProgressIndicator()) 
+            : SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(16.w, 25.h, 16.w, 24.h),
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildCountdownRow(),
@@ -196,6 +235,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                 ],
               ),
             ),
+      ),
     );
   }
 
@@ -208,59 +248,79 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
       surfaceTintColor: Colors.transparent,
       titleSpacing: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: Colors.black, size: 20.sp),
-        onPressed: () => Navigator.pop(context),
+        icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+        onPressed: () {
+          if (widget.onMenuTap != null) {
+            widget.onMenuTap!();
+          } else {
+            _scaffoldKey.currentState?.openDrawer();
+          }
+        },
       ),
       title: Text(
         'Prebidding',
         style: TextStyle(
           fontFamily: 'Inter',
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           fontSize: 16.sp,
           color: Colors.black,
         ),
       ),
       actions: [
-        Container(
-          margin: EdgeInsets.only(right: 8.w),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30.r),
-            border: Border.all(color: const Color(0xFF9B9B9B), width: 0.6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/prebitting/help.png',
-                width: 14.sp,
-                height: 14.sp,
-                
-              ),
-              SizedBox(width: 4.w),
-              Text(
-                'Need Help ?',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 10.sp,
-                  height: 1.0,
-                  color: const Color(0xFF018F46),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: const Color(0xFF9B9B9B),
+                  width: 0.5.w,
                 ),
               ),
-            ],
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/scheme_images/need_help.png',
+                    width: 16.w,
+                    height: 16.h,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'Need Help ?',
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(right: 16.w),
-          child: Image.asset(
-            'assets/prebitting/notification.png',
-            width: 22.sp,
-            height: 22.sp,
-            color: Colors.black,
+          SizedBox(width: 10.w),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
+              );
+            },
+            child: Image.asset(
+              'assets/home_images/notification.png',
+              width: 24.w,
+              height: 24.h,
+            ),
           ),
-        ),
-      ],
+          SizedBox(width: 16.w),
+        ],
     );
   }
 
@@ -617,6 +677,8 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
       MaterialPageRoute(builder: (_) => TermsAndConditionsScreen(
         chitId: widget.chitId,
         amount: _amountController.text.trim(),
+        groupName: widget.groupCode,
+        bidderName: _bidderName,
       )),
     );
   }

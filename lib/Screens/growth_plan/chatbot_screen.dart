@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../Home_Sections/drawers_screen.dart';
+import 'calculator_screen.dart';
 
 class ChatbotScreen extends StatefulWidget {
-  const ChatbotScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const ChatbotScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<ChatbotScreen> createState() => _ChatbotScreenState();
 }
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
@@ -68,26 +74,49 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     final double scaleW = screenSize.width / 360.0;
     final double scaleH = screenSize.height / 800.0;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(57 * scaleH.clamp(0.85, 1.2)),
-        child: AppBar(
-          backgroundColor: const Color(0xFFFFFFFF),
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          toolbarHeight: 57 * scaleH.clamp(0.85, 1.2),
-          centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black87, size: 22),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF7F8FA),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: PreferredSize(
+          preferredSize: Size.fromHeight(57 * scaleH.clamp(0.85, 1.2)),
+          child: AppBar(
+            backgroundColor: const Color(0xFFFFFFFF),
+            elevation: 0,
+            titleSpacing: 0,
+            surfaceTintColor: Colors.transparent,
+            scrolledUnderElevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.menu, color: Colors.black87, size: 22),
+              onPressed: () {
+                if (widget.onMenuTap != null) {
+                  widget.onMenuTap!();
+                } else {
+                  _scaffoldKey.currentState?.openDrawer();
+                }
+              },
+            ),
           title: Text(
             'Chatbot',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              fontSize: 16 * scaleW.clamp(0.85, 1.2),
-              fontWeight: FontWeight.w400,
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
               fontStyle: FontStyle.normal,
               letterSpacing: 0,
               height: 1.0,
@@ -233,7 +262,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildMessageItem(Map<String, dynamic> msg, double scaleW, double scaleH) {
@@ -379,7 +408,12 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             height: 36,
                             child: OutlinedButton(
                               onPressed: () {
-                                Navigator.of(context).pop();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const CalculatorScreen()),
+                                );
                               },
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(

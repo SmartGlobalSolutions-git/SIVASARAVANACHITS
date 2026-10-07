@@ -15,6 +15,7 @@ class FirstTimeMainWrapper extends StatefulWidget {
 class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
   int _currentIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   late final List<Widget> _pages;
 
@@ -53,13 +54,16 @@ class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _currentIndex == 0,
+      canPop: _currentIndex == 0 && !_isDrawerOpen,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) {
-          if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
-            _scaffoldKey.currentState?.closeDrawer();
-            return;
-          }
+        if (didPop) return;
+        
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+          return;
+        }
+        
+        if (_currentIndex != 0) {
           setState(() {
             _currentIndex = 0;
           });
@@ -67,6 +71,11 @@ class _FirstTimeMainWrapperState extends State<FirstTimeMainWrapper> {
       },
       child: Scaffold(
         key: _scaffoldKey,
+        onDrawerChanged: (isOpened) {
+          setState(() {
+            _isDrawerOpen = isOpened;
+          });
+        },
         drawer: const DrawersScreen(isFirstTimeUser: true),
         body: _pages[_currentIndex],
         bottomNavigationBar: FirstTimeBottomNav(

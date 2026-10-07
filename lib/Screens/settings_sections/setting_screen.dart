@@ -1,48 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'app_colors.dart';
 import 'profile_screen.dart';
 import 'privacy_policy.dart';
 import 'terms_and_condition.dart';
-import 'help_and_support.dart';
 import 'faq.dart';
 import 'about_us.dart';
 import '../login_sections/user_type_selection_screen.dart';
 import '../../services/shared_prefs_helper.dart';
 
+import '../Home_Sections/drawers_screen.dart';
+
 /// The Settings screen displaying Account, App Preferences, Security & Privacy,
 /// Support, About, and Logout options, using the asset icons provided.
-class SettingScreen extends StatelessWidget {
-  const SettingScreen({super.key});
+class SettingScreen extends StatefulWidget {
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const SettingScreen({super.key, this.onBackTap, this.onMenuTap});
+
+  @override
+  State<SettingScreen> createState() => _SettingScreenState();
+}
+
+class _SettingScreenState extends State<SettingScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.settingsBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.appBarBackground,
-        elevation: 0.5,
-        centerTitle: false,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppColors.settingsSubheading,
-            size: 22.r,
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: AppColors.settingsBackground,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: AppColors.appBarBackground,
+          elevation: 0.5,
+          centerTitle: false,
+          leading: IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: AppColors.settingsSubheading,
+              size: 24.sp,
+            ),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
           ),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        titleSpacing: 0,
-        surfaceTintColor: Colors.transparent,
-        title: Text(
-          'Setting',
-          style: GoogleFonts.inter(
-            color: AppColors.settingsSubheading,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
+          titleSpacing: 0,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            'Setting',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
           ),
         ),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           //physics: const BouncingScrollPhysics(),
@@ -117,7 +153,7 @@ class SettingScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const HelpAndSupportScreen(),
+                        builder: (context) => const NeedHelpScreen(),
                       ),
                     );
                   },
@@ -169,7 +205,7 @@ class SettingScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// Builds uppercase section header label (e.g. ACCOUNT, SUPPORT).

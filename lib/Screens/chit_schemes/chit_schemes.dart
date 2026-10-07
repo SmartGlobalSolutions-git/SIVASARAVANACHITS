@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
 import 'package:siva_saravana/Screens/chit_schemes/subscription_screen.dart';
+import 'package:siva_saravana/Screens/Home_Sections/drawers_screen.dart';
 import '../../services/chit_scheme_api.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 
@@ -10,7 +11,8 @@ class ChitSchemesScreen extends StatefulWidget {
   final int initialTab;
   final VoidCallback? onBackTap;
   final VoidCallback? onMenuTap;
-  const ChitSchemesScreen({super.key, this.initialTab = 0, this.onBackTap, this.onMenuTap});
+  final Map<String, String>? growthPlanParams;
+  const ChitSchemesScreen({super.key, this.initialTab = 0, this.onBackTap, this.onMenuTap, this.growthPlanParams});
 
   @override
   State<ChitSchemesScreen> createState() => _ChitSchemesScreenState();
@@ -23,6 +25,9 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
   bool _isLoadingSchemes = true;
   bool _isLoadingAvailable = true;
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +36,12 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
   }
 
   Future<void> _fetchData() async {
-    final schemesData = await ChitSchemeApiService.fetchChitSchemes();
+    List<dynamic>? schemesData;
+    if (widget.growthPlanParams != null) {
+      schemesData = await ChitSchemeApiService.fetchGrowthPlanChits(widget.growthPlanParams!);
+    } else {
+      schemesData = await ChitSchemeApiService.fetchChitSchemes();
+    }
     if (mounted) {
       setState(() {
         _schemes = schemesData ?? [];
@@ -53,34 +63,49 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
     final currentList = _selectedTabIndex == 0 ? _schemes : _availableChits;
     final isLoading = _selectedTabIndex == 0 ? _isLoadingSchemes : _isLoadingAvailable;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.menu,
-            color: Colors.black,
-            size: 24.sp,
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF3F3F5),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: Colors.black,
+              size: 24.sp,
+            ),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
           ),
-          onPressed: () {
-            if (widget.onMenuTap != null) {
-              widget.onMenuTap!();
-            } else if (widget.onBackTap != null) {
-              widget.onBackTap!();
-            } else {
-              Navigator.maybePop(context);
-            }
-          },
-        ),
         titleSpacing: 0,
         title: Text(
           'Chits Schemes',
           style: TextStyle(
-            fontSize: 18.sp,
+            fontSize: 16.sp,
             fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w600,
             color: Colors.black,
           ),
         ),
@@ -165,7 +190,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildTabBar() {
@@ -280,9 +305,9 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
   }
 
   Widget _buildTableRow(dynamic item) {
-    final String chitValue = '₹ ${_formatAmount(double.tryParse(item['ch_value']?.toString() ?? '0') ?? 0)}';
-    final String members = '${item['nom'] ?? '0'}';
-    final String months = '${item['nom'] ?? '0'}';
+    final String chitValue = '₹ ${_formatAmount(double.tryParse((item['ch_value'] ?? item['chit_value'])?.toString() ?? '0') ?? 0)}';
+    final String members = '${item['nom'] ?? item['no_of_members'] ?? item['no_of_emis'] ?? '0'}';
+    final String months = '${item['nom'] ?? item['no_of_members'] ?? item['no_of_emis'] ?? '0'}';
 
     return Container(
       color: Colors.white,
@@ -547,8 +572,14 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
           
           GestureDetector(
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Detail view coming soon')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SubscriptionScreen(
+                    chitId: item['scheme_id'] ?? 0,
+                    isAvailableChit: true,
+                  ),
+                ),
               );
             },
             child: Container(

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import '../payment_sections/payment_history.dart';
 import '../payment_sections/payment_amount.dart';
+import 'package:siva_saravana/Screens/Home_Sections/drawers_screen.dart';
 
 class AppColors {
   static const Color scaffoldBackground = Color(0xFFF3F3F5);
@@ -41,21 +42,42 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool isMyChitsOverview = true;
   bool isIndividualChit = true;
   List<bool> selectedIndividualChits = [true, true];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldBackground,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: AppColors.scaffoldBackground,
-        elevation: 0,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: AppColors.scaffoldBackground,
+          elevation: 0,
         leading: GestureDetector(
           onTap: () {
             if (widget.onMenuTap != null) {
               widget.onMenuTap!();
+            } else {
+              _scaffoldKey.currentState?.openDrawer();
             }
           },
           child: const Icon(Icons.menu, color: AppColors.textDark),
@@ -317,7 +339,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           const ChatboxWidget(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildIndividualChitCard(int index) {
@@ -1124,20 +1146,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildBotIcon() {
-    return Container(
-      padding: EdgeInsets.all(8.w),
-      decoration: BoxDecoration(
-        color: Colors.amber,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 5),
-        ],
-      ),
-      child: Icon(Icons.smart_toy, color: Colors.black87, size: 30.sp),
     );
   }
 }

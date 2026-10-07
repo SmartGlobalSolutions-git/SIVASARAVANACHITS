@@ -1,33 +1,69 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../Home_Sections/drawers_screen.dart';
 import 'pending_history.dart';
 import 'approval_history.dart';
 
 class PaymentHistory extends StatefulWidget {
-  const PaymentHistory({Key? key}) : super(key: key);
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const PaymentHistory({Key? key, this.onBackTap, this.onMenuTap}) : super(key: key);
 
   @override
   State<PaymentHistory> createState() => _PaymentHistoryState();
 }
 
 class _PaymentHistoryState extends State<PaymentHistory> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool isMyChitsOverview = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F9),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        title: Text(
-          'Payment History',
-          style: TextStyle(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.w500),
-        ),
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF4F5F9),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          title: Text(
+            'Payment History',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
+          ),
       ),
       body: Column(
         children: [
@@ -173,7 +209,7 @@ class _PaymentHistoryState extends State<PaymentHistory> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildHistoryCard({

@@ -4,24 +4,67 @@ import 'package:siva_saravana/constants/app_colors.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'review_pay.dart';
 
-class PaymentAmountScreen extends StatelessWidget {
-  const PaymentAmountScreen({Key? key}) : super(key: key);
+import '../Home_Sections/drawers_screen.dart';
+
+class PaymentAmountScreen extends StatefulWidget {
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const PaymentAmountScreen({Key? key, this.onBackTap, this.onMenuTap}) : super(key: key);
+
+  @override
+  State<PaymentAmountScreen> createState() => _PaymentAmountScreenState();
+}
+
+class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F9),
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: const Color(0xFFF4F5F9),
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back, color: Colors.black),
-        ),
-        title: Text(
-          'Payment',
-          style: TextStyle(color: Colors.black, fontSize: 18.sp, fontWeight: FontWeight.w500),
-        ),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF4F5F9),
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          title: Text(
+            'Payment',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
+          ),
       ),
       body: Stack(
         children: [
@@ -112,7 +155,7 @@ class PaymentAmountScreen extends StatelessWidget {
           const ChatboxWidget(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildChitAmountCard({

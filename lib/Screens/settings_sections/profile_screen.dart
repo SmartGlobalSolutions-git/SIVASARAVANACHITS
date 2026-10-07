@@ -5,15 +5,21 @@ import 'app_colors.dart';
 
 import '../../services/profile_view_api.dart';
 
+import '../Home_Sections/drawers_screen.dart';
+
 /// The Profile screen matching the provided design.
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const ProfileScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   Map<String, dynamic>? _profileData;
   bool _isLoading = true;
   String? _errorMessage;
@@ -40,10 +46,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     const avatarDiameter = 100.0;
 
-    return Scaffold(
-      backgroundColor: AppColors.bottomSheetCardBg,
-      body: Stack(
-        children: [
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: AppColors.bottomSheetCardBg,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        body: Stack(
+          children: [
           // 1. Green Header Background (#058334)
           Container(
             height: 250.h,
@@ -68,11 +91,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         IconButton(
                           icon: Icon(
-                            Icons.arrow_back,
+                            Icons.menu,
                             color: AppColors.profileHeaderIcon,
-                            size: 22.r,
+                            size: 24.sp,
                           ),
-                          onPressed: () => Navigator.of(context).maybePop(),
+                          onPressed: () {
+                            if (widget.onMenuTap != null) {
+                              widget.onMenuTap!();
+                            } else {
+                              _scaffoldKey.currentState?.openDrawer();
+                            }
+                          },
                         ),
                         SizedBox(width: 4.w),
                         Text(
@@ -238,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   /// Builds the white card containing personal information rows.

@@ -89,7 +89,7 @@ class PrebidApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> insertPrebid(String chitId, String amount) async {
+  static Future<Map<String, dynamic>?> insertPrebid(String chitId, String amount, String groupName, String bidderName) async {
     try {
       final String lt = await SharedPrefsHelper.getLatitude();
       final String ln = await SharedPrefsHelper.getLongitude();
@@ -105,6 +105,8 @@ class PrebidApiService {
         'type': '5014',
         'chit_id': chitId,
         'amount': amount,
+        'group_name': groupName,
+        'bidder_name': bidderName,
       };
       
       if (token != null) requestBody['token'] = token;

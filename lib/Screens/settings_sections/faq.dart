@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'app_colors.dart';
-import 'help_and_support.dart';
 import '../../services/faq_api.dart';
+
+import '../Home_Sections/drawers_screen.dart';
 
 /// The FAQ Screen displaying expandable questions, answers, and
 /// a "Still have a question?" contact support banner.
 class FAQScreen extends StatefulWidget {
-  const FAQScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const FAQScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<FAQScreen> createState() => _FAQScreenState();
 }
 
 class _FAQScreenState extends State<FAQScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
+
   // Item 0 (Question 1) is expanded by default as shown in the design
   final Set<int> _expandedIndices = {0};
 
@@ -88,40 +95,62 @@ class _FAQScreenState extends State<FAQScreen> {
       color: AppColors.faqAnswerText,
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.screenBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.appBarBackground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppColors.appBarIcon,
-            size: 22.r,
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: AppColors.screenBackground,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: AppColors.appBarBackground,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: Colors.black,
+              size: 24.sp,
+            ),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
           ),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        titleSpacing: 0,
-        title: Text(
-          'FAQ',
-          style: GoogleFonts.inter(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w400,
-            height: 1.0,
-            letterSpacing: 0,
-            color: AppColors.appBarTitle,
+          title: Text(
+            'FAQ',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.h),
+            child: Container(
+              color: AppColors.appBarDivider,
+              height: 1.h,
+            ),
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1.h),
-          child: Container(
-            color: AppColors.appBarDivider,
-            height: 1.h,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: ScrollConfiguration(
           behavior: ScrollConfiguration.of(context).copyWith(
@@ -176,7 +205,7 @@ class _FAQScreenState extends State<FAQScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   /// Builds an individual FAQ card with rounded corners, number badge,
@@ -352,7 +381,7 @@ class _FAQScreenState extends State<FAQScreen> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => const HelpAndSupportScreen(),
+                    builder: (context) => const NeedHelpScreen(),
                   ),
                 );
               },

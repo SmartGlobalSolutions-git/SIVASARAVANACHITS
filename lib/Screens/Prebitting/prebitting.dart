@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
+import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
+import 'package:siva_saravana/constants/app_colors.dart';
 import 'prebid_detail.dart';
 import 'package:intl/intl.dart';
 import '../../services/prebid_api.dart';
 import '../../services/profile_view_api.dart';
+import '../Home_Sections/drawers_screen.dart';
 
 const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kCardBorderColor = Color(0xFFA7F3D0);
@@ -22,13 +26,17 @@ const Color kPrebidGradientStart = Color(0xFFE2B721);
 const Color kPrebidGradientEnd = Color(0xFFC39F1E);
 
 class PrebiddingListScreen extends StatefulWidget {
-  const PrebiddingListScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const PrebiddingListScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<PrebiddingListScreen> createState() => _PrebiddingListScreenState();
 }
 
 class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool _isLoading = true;
   List<dynamic> _items = [];
   String _userName = '';
@@ -64,20 +72,38 @@ class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kScreenBg,
-      appBar: _buildAppBar(context),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _items.isEmpty
-          ? const Center(child: Text("No prebid items found."))
-          : ListView.separated(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: kScreenBg,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: _buildAppBar(context),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _items.isEmpty
+            ? const Center(child: Text("No prebid items found."))
+            : ListView.separated(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
               itemCount: _items.length,
               separatorBuilder: (_, __) => SizedBox(height: 16.h),
               itemBuilder: (context, index) =>
                   PrebidCard(item: _items[index], userName: _userName),
             ),
+      ),
     );
   }
 
@@ -89,61 +115,80 @@ class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
       surfaceTintColor: Colors.transparent,
       titleSpacing: 0,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, size: 24.sp, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
+        icon: Icon(Icons.menu, size: 24.sp, color: Colors.black),
+        onPressed: () {
+          if (widget.onMenuTap != null) {
+            widget.onMenuTap!();
+          } else {
+            _scaffoldKey.currentState?.openDrawer();
+          }
+        },
       ),
       title: Text(
         'Prebidding',
         style: TextStyle(
           fontFamily: 'Inter',
-          fontWeight: FontWeight.w400,
+          fontWeight: FontWeight.w600,
           fontSize: 16.sp,
           height: 1.0,
           color: Colors.black,
         ),
       ),
       actions: [
-        // "Need Help ?" pill.
-        Container(
-          margin: EdgeInsets.only(right: 8.w),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30.r),
-            border: Border.all(color: kNeedHelpBorderColor, width: 0.6),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset(
-                'assets/prebitting/help.png',
-                width: 14.sp,
-                height: 14.sp,
-              ),
-              SizedBox(width: 4.w),
-              Text(
-                'Need Help ?',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 10.sp,
-                  height: 1.0,
-                  color: kNeedHelpTextColor,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: const Color(0xFF9B9B9B),
+                  width: 0.5.w,
                 ),
               ),
-            ],
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/scheme_images/need_help.png',
+                    width: 16.w,
+                    height: 16.h,
+                  ),
+                  SizedBox(width: 4.w),
+                  Text(
+                    'Need Help ?',
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        // Notification bell.
-        Padding(
-          padding: EdgeInsets.only(right: 16.w),
-          child: Image.asset(
-            'assets/prebitting/notification.png',
-            width: 22.sp,
-            height: 22.sp,
-            color: Colors.black,
+          SizedBox(width: 10.w),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
+              );
+            },
+            child: Image.asset(
+              'assets/home_images/notification.png',
+              width: 24.w,
+              height: 24.h,
+            ),
           ),
-        ),
-      ],
+          SizedBox(width: 16.w),
+        ],
     );
   }
 }

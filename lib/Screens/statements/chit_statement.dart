@@ -1,18 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
+import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
+import 'package:siva_saravana/constants/app_colors.dart';
 import 'package:siva_saravana/services/chit_scheme_api.dart';
 import 'package:intl/intl.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
+import 'package:siva_saravana/utils/pdf_generator.dart';
+import '../Home_Sections/drawers_screen.dart';
 
 class ChitStatementScreen extends StatefulWidget {
   final dynamic chitId;
   final String? dateRange;
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
 
   const ChitStatementScreen({
     super.key,
     this.chitId,
     this.dateRange,
+    this.onBackTap,
+    this.onMenuTap,
   });
 
   @override
@@ -20,6 +28,8 @@ class ChitStatementScreen extends StatefulWidget {
 }
 
 class _ChitStatementScreenState extends State<ChitStatementScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool _isLoading = true;
   List<dynamic> _transactions = [];
 
@@ -34,8 +44,8 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
       final data = await ChitSchemeApiService.fetchChitStatement(int.parse(widget.chitId.toString()));
       if (mounted) {
         setState(() {
-          if (data != null && data['transactions'] != null) {
-            _transactions = data['transactions'];
+          if (data != null && data['status'] == true && data['data'] != null && data['data']['transactions'] != null) {
+            _transactions = data['data']['transactions'];
           }
           _isLoading = false;
         });
@@ -60,88 +70,134 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
     return amount.toString();
   }
 
-  void _onDownload() {
+  Future<void> _onDownload() async {
+    if (_transactions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No transactions to download')),
+      );
+      return;
+    }
+    
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Downloading Chit Statement PDF...'),
-        duration: Duration(seconds: 2),
-        backgroundColor: Color(0xFF008744),
+        content: Text('Generating PDF...'),
+        duration: Duration(seconds: 1),
+        backgroundColor: Color(0xFF007A55),
       ),
     );
+    
+    await PdfGenerator.generateChitStatement(_transactions, widget.chitId);
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Saved to Downloads folder!'),
+          duration: Duration(seconds: 2),
+          backgroundColor: Color(0xFF007A55),
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F5),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black, size: 24.sp),
-          onPressed: () => Navigator.pop(context),
-        ),
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: const Color(0xFFF3F3F5),
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: Colors.black, size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
         title: Text(
           'Chit Statement',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w500,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: false,
         titleSpacing: 0,
         actions: [
-          Center(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NeedHelpScreen(),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20.r),
+                border: Border.all(
+                  color: const Color(0xFF9B9B9B),
+                  width: 0.5.w,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'assets/scheme_images/need_help.png',
+                    width: 16.w,
+                    height: 16.h,
                   ),
-                );
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w,
-                  vertical: 6.h,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.r),
-                  border: Border.all(
-                    color: const Color(0xFF9B9B9B),
-                    width: 0.6.w,
+                  SizedBox(width: 4.w),
+                  Text(
+                    'Need Help ?',
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      fontSize: 12.sp,
+                    ),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Image.asset(
-                      'assets/scheme_images/need_help.png',
-                      height: 16.h,
-                      width: 16.w,
-                    ),
-                    SizedBox(width: 4.w),
-                    Text(
-                      'Need Help ?',
-                      style: TextStyle(
-                        color: const Color(0xFF018F46),
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
           SizedBox(width: 10.w),
-          IconButton(
-            icon: Icon(Icons.notifications_none, color: Colors.black, size: 24.sp),
-            onPressed: () {},
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
+              );
+            },
+            child: Image.asset(
+              'assets/home_images/notification.png',
+              width: 24.w,
+              height: 24.h,
+            ),
           ),
-          SizedBox(width: 10.w),
+          SizedBox(width: 16.w),
         ],
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(1.h),
@@ -186,7 +242,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
           const ChatboxWidget(),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildTableCard() {
@@ -331,10 +387,10 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
   Widget _buildBottomActions() {
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.fromLTRB(20.w, 14.h, 20.w, 24.h),
+      padding: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 20.h),
       child: SizedBox(
         width: double.infinity,
-        height: 48.h,
+        height: 40.h,
         child: ElevatedButton.icon(
           onPressed: _onDownload,
           icon: Icon(
@@ -351,7 +407,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
             ),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF008744),
+            backgroundColor: const Color(0xFF007A55),
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24.r),

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_saravana/constants/app_assets.dart';
 import '../../constants/app_colors.dart';
+import 'drawers_screen.dart';
 
 /// Model representing a single notification item
 class NotificationItemData {
@@ -28,7 +29,9 @@ class NotificationItemData {
 }
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const NotificationScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();
@@ -43,6 +46,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   static const Color _timeGreen = Color(0xFF00A859);
   static const Color _timeDark = Color(0xFF374151);
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
 
   late final List<NotificationItemData> _notifications;
 
@@ -155,24 +161,43 @@ class _NotificationScreenState extends State<NotificationScreen> {
   Widget build(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: AppColors.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: const Color(0xFF1E1E1E), size: 24.sp),
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        title: Text(
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.menu, color: const Color(0xFF1E1E1E), size: 24.sp),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
+          ),
+          title: Text(
           'Notification',
           style: GoogleFonts.inter(
-            fontSize: 18.sp,
+            fontSize: 16.sp,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF1E1E1E),
           ),
@@ -208,7 +233,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
 

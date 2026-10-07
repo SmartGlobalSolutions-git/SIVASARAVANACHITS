@@ -5,18 +5,24 @@ import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
 import 'package:siva_saravana/widgets/chit_enquiry.dart';
 import 'package:siva_saravana/constants/app_colors.dart';
+import 'package:siva_saravana/Screens/Home_Sections/drawers_screen.dart';
 import 'screen_utils.dart';
 import '../../services/chit_scheme_api.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final int chitId;
-  const SubscriptionScreen({super.key, required this.chitId});
+  final bool isAvailableChit;
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const SubscriptionScreen({super.key, required this.chitId, this.isAvailableChit = false, this.onBackTap, this.onMenuTap});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool _isLoading = true;
   Map<String, dynamic>? _itemData;
   List<dynamic> _schedule = [];
@@ -29,16 +35,48 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _fetchDetails() async {
-    final detailData = await ChitSchemeApiService.fetchChitSchemeDetail(widget.chitId);
-    if (mounted) {
-      setState(() {
-        if (detailData != null) {
-          _itemData = detailData['item'];
-          _schedule = detailData['schedule'] ?? [];
-          _totals = detailData['totals'];
-        }
-        _isLoading = false;
-      });
+    if (widget.isAvailableChit) {
+      final detailData = await ChitSchemeApiService.fetchAvailableChitDetail(widget.chitId);
+      if (mounted) {
+        setState(() {
+          if (detailData != null) {
+            _itemData = detailData;
+            _schedule = detailData['sub_records'] ?? [];
+            _calculateTotals();
+          }
+          _isLoading = false;
+        });
+      }
+    } else {
+      final detailData = await ChitSchemeApiService.fetchChitSchemeDetail(widget.chitId);
+      if (mounted) {
+        setState(() {
+          if (detailData != null) {
+            _itemData = detailData['item'];
+            _schedule = detailData['schedule'] ?? [];
+            _totals = detailData['totals'];
+          }
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _calculateTotals() {
+    if (_schedule.isNotEmpty) {
+      double totalDue = 0;
+      double totalDividend = 0;
+      double totalPrize = 0;
+      for (var row in _schedule) {
+        totalDue += double.tryParse(row['due_amt']?.toString() ?? '0') ?? 0;
+        totalDividend += double.tryParse(row['damount']?.toString() ?? '0') ?? 0;
+        totalPrize += double.tryParse(row['pamount']?.toString() ?? '0') ?? 0;
+      }
+      _totals = {
+        'due_amt': totalDue.toInt(),
+        'divident': totalDividend.toInt(),
+        'total': totalPrize.toInt(),
+      };
     }
   }
 
@@ -46,28 +84,49 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget build(BuildContext context) {
     ScreenUtil.init(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
         backgroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppColors.backIconColor,
-            size: 24.sp,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          titleSpacing: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: AppColors.backIconColor,
+              size: 24.sp,
+            ),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
           ),
-          onPressed: () {
-            Navigator.maybePop(context);
-          },
-        ),
         title: Text(
           'Subscription Plan',
           style: TextStyle(
-            fontSize: 19.sp,
-            fontWeight: FontWeight.bold,
+            fontSize: 16.sp,
+            fontWeight: FontWeight.w600,
             color: AppColors.titleText,
           ),
         ),
@@ -226,6 +285,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                               ),
                                               itemBuilder: (context, index) {
                                                 final row = _schedule[index];
+                                                final String monthStr = widget.isAvailableChit ? '${row['month'] ?? ''}' : '${row['sno'] ?? ''}';
+                                                final String dueAmtStr = '${row['due_amt'] ?? ''}';
+                                                final String dividendStr = widget.isAvailableChit ? '${row['damount'] ?? ''}' : '${row['divident'] ?? ''}';
+                                                final String bidAmtStr = widget.isAvailableChit ? '${row['dis_amount'] ?? ''}' : '${row['bid_amt'] ?? ''}';
+                                                final String prizeAmtStr = widget.isAvailableChit ? '${row['pamount'] ?? ''}' : '${row['payment'] ?? ''}';
+
                                                 return Container(
                                                   padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
                                                   color: Colors.white,
@@ -235,7 +300,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                       Expanded(
                                                         flex: 2,
                                                         child: Text(
-                                                          '${row['sno'] ?? ''}',
+                                                          monthStr,
                                                           textAlign: TextAlign.center,
                                                           style: TextStyle(
                                                             fontSize: 13.sp,
@@ -248,7 +313,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                       Expanded(
                                                         flex: 3,
                                                         child: Text(
-                                                          '${row['due_amt'] ?? ''}',
+                                                          dueAmtStr,
                                                           textAlign: TextAlign.center,
                                                           style: TextStyle(fontSize: 13.sp, color: const Color(0xFF333333)),
                                                         ),
@@ -257,7 +322,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                       Expanded(
                                                         flex: 3,
                                                         child: Text(
-                                                          '${row['divident'] ?? ''}',
+                                                          dividendStr,
                                                           textAlign: TextAlign.center,
                                                           style: TextStyle(fontSize: 13.sp, color: const Color(0xFF333333)),
                                                         ),
@@ -266,7 +331,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                       Expanded(
                                                         flex: 3,
                                                         child: Text(
-                                                          '${row['bid_amt'] ?? ''}',
+                                                          bidAmtStr,
                                                           textAlign: TextAlign.center,
                                                           style: TextStyle(fontSize: 13.sp, color: const Color(0xFF333333)),
                                                         ),
@@ -275,7 +340,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                       Expanded(
                                                         flex: 3,
                                                         child: Text(
-                                                          '${row['payment'] ?? ''}',
+                                                          prizeAmtStr,
                                                           textAlign: TextAlign.center,
                                                           style: TextStyle(fontSize: 13.sp, color: const Color(0xFF333333)),
                                                         ),
@@ -444,7 +509,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ],
               ),
             ),
-    );
+    ));
   }
 
   /// Available Slots Card UI Component matching exact second screenshot

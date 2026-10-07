@@ -4,16 +4,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import '../../services/terms_and_conditions_api.dart';
 
+import '../Home_Sections/drawers_screen.dart';
+
 /// The Terms & Conditions screen displaying user agreements, digital service rules,
 /// payment terms, auction rules, and company policies.
 class TermsAndConditionsScreen extends StatefulWidget {
-  const TermsAndConditionsScreen({super.key});
+  final VoidCallback? onBackTap;
+  final VoidCallback? onMenuTap;
+  const TermsAndConditionsScreen({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<TermsAndConditionsScreen> createState() => _TermsAndConditionsScreenState();
 }
 
 class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isDrawerOpen = false;
   bool _isLoading = true;
   Map<String, dynamic>? _termsData;
 
@@ -54,40 +60,62 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
       color: AppColors.policyBody,
     );
 
-    return Scaffold(
-      backgroundColor: AppColors.screenBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.appBarBackground,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: AppColors.appBarIcon,
-            size: 22.r,
+    return PopScope(
+      canPop: !_isDrawerOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_isDrawerOpen) {
+          _scaffoldKey.currentState?.closeDrawer();
+        }
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: AppColors.screenBackground,
+        onDrawerChanged: (isOpened) {
+          if (widget.onMenuTap == null) {
+            setState(() {
+              _isDrawerOpen = isOpened;
+            });
+          }
+        },
+        drawer: widget.onMenuTap == null ? const DrawersScreen() : null,
+        appBar: AppBar(
+          backgroundColor: AppColors.appBarBackground,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.menu,
+              color: Colors.black,
+              size: 24.sp,
+            ),
+            onPressed: () {
+              if (widget.onMenuTap != null) {
+                widget.onMenuTap!();
+              } else {
+                _scaffoldKey.currentState?.openDrawer();
+              }
+            },
           ),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        titleSpacing: 0,
-        title: Text(
-          _termsData?['title'] ?? '',
-          style: GoogleFonts.inter(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.w400,
-            height: 1.0,
-            letterSpacing: 0,
-            color: AppColors.appBarTitle,
+          title: Text(
+            _termsData?['title'] ?? 'Terms and Conditions',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              color: Colors.black,
+            ),
+          ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight(1.h),
+            child: Container(
+              color: AppColors.appBarDivider,
+              height: 1.h,
+            ),
           ),
         ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(1.h),
-          child: Container(
-            color: AppColors.appBarDivider,
-            height: 1.h,
-          ),
-        ),
-      ),
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -139,7 +167,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                     ),
                   ),
       ),
-    );
+    ));
   }
 
   /// Builds a section with a semi-bold title and regular body text.
