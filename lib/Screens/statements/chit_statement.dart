@@ -227,7 +227,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                                   width: constraints.maxWidth,
                                   child: RotatedBox(
                                     quarterTurns: 3,
-                                    child: _buildTableCard(),
+                                    child: _buildTableCard(constraints.maxHeight),
                                   ),
                                 ),
                               ),
@@ -245,8 +245,19 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
     ));
   }
 
-  Widget _buildTableCard() {
+  Widget _buildTableCard(double minWidth) {
+    double totalWidth = 50.w + 90.w + 140.w + 80.w + 80.w + 80.w + 80.w;
+    double scale = minWidth > totalWidth ? minWidth / totalWidth : 1.0;
+    double w1 = 50.w * scale;
+    double w2 = 90.w * scale;
+    double w3 = 140.w * scale;
+    double w4 = 80.w * scale;
+    double w5 = 80.w * scale;
+    double w6 = 80.w * scale;
+    double w7 = 80.w * scale;
+
     return Container(
+      constraints: BoxConstraints(minWidth: minWidth),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
@@ -265,7 +276,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          _buildHeaderRow(),
+          _buildHeaderRow(w1, w2, w3, w4, w5, w6, w7),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.vertical,
@@ -273,10 +284,10 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   for (int i = 0; i < _transactions.length; i++)
-                    _buildDataRow(_transactions[i], i),
+                    _buildDataRow(_transactions[i], i, w1, w2, w3, w4, w5, w6, w7),
                   if (_transactions.length < 10)
                     for (int i = _transactions.length; i < 10; i++)
-                      _buildDataRow({}, i),
+                      _buildDataRow({}, i, w1, w2, w3, w4, w5, w6, w7),
                 ],
               ),
             ),
@@ -286,19 +297,19 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
     );
   }
 
-  Widget _buildHeaderRow() {
+  Widget _buildHeaderRow(double w1, double w2, double w3, double w4, double w5, double w6, double w7) {
     return Container(
       color: const Color(0xFF007A55),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildHeaderCell('SL. NO.', width: 50),
-          _buildHeaderCell('DATE', width: 90),
-          _buildHeaderCell('TYPE', width: 140),
-          _buildHeaderCell('DIVIDEND', width: 80),
-          _buildHeaderCell('DEBIT', width: 80),
-          _buildHeaderCell('CREDIT', width: 80),
-          _buildHeaderCell('BALANCE', width: 80, isLast: true),
+          _buildHeaderCell('SL. NO.', width: w1),
+          _buildHeaderCell('DATE', width: w2),
+          _buildHeaderCell('TYPE', width: w3),
+          _buildHeaderCell('DIVIDEND', width: w4),
+          _buildHeaderCell('DEBIT', width: w5),
+          _buildHeaderCell('CREDIT', width: w6),
+          _buildHeaderCell('BALANCE', width: w7, isLast: true),
         ],
       ),
     );
@@ -306,7 +317,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
 
   Widget _buildHeaderCell(String title, {required double width, bool isLast = false}) {
     return Container(
-      width: width.w,
+      width: width,
       height: 40.h,
       alignment: Alignment.center,
       decoration: BoxDecoration(
@@ -329,7 +340,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
     );
   }
 
-  Widget _buildDataRow(dynamic entry, int index) {
+  Widget _buildDataRow(dynamic entry, int index, double w1, double w2, double w3, double w4, double w5, double w6, double w7) {
     final isEven = index % 2 == 0;
     final rowBg = isEven ? Colors.white : const Color(0xFFF8FAFC);
     final isEmptyRow = entry is Map && entry.isEmpty;
@@ -339,13 +350,13 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildDataCell(isEmptyRow ? '' : (entry['sno']?.toString() ?? ''), width: 50, isBold: true),
-          _buildDataCell(isEmptyRow ? '' : (entry['date']?.toString() ?? ''), width: 90),
-          _buildDataCell(isEmptyRow ? '' : (entry['type']?.toString() ?? ''), width: 140),
-          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['dividend']), width: 80),
-          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['debit']), width: 80),
-          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['credit']), width: 80),
-          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['balance']), width: 80, isBold: true, isInstallment: true, isLast: true),
+          _buildDataCell(isEmptyRow ? '' : (entry['sno']?.toString() ?? ''), width: w1, isBold: true),
+          _buildDataCell(isEmptyRow ? '' : (entry['date']?.toString() ?? ''), width: w2),
+          _buildDataCell(isEmptyRow ? '' : (entry['type']?.toString() ?? ''), width: w3),
+          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['dividend']), width: w4),
+          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['debit']), width: w5),
+          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['credit']), width: w6),
+          _buildDataCell(isEmptyRow ? '' : _formatAmount(entry['balance']), width: w7, isBold: true, isInstallment: true, isLast: true),
         ],
       ),
     );
@@ -359,7 +370,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
     bool isLast = false,
   }) {
     return Container(
-      width: width.w,
+      width: width,
       height: 36.h,
       alignment: Alignment.center,
       decoration: BoxDecoration(

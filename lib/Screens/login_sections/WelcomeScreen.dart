@@ -4,7 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors.dart';
 import 'top_header.dart';
-import 'user_type_selection_screen.dart';
+import '../login_sections/user_type_selection_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -91,8 +92,40 @@ class WelcomeScreen extends StatelessWidget {
 
                   SizedBox(height: 8.h),
 
-                  // Star rating (4.5 / 5)
-                  const _StarRating(rating: 4.5),
+                  // Star rating (5 / 5)
+                  const _StarRating(rating: 5.0),
+
+                  SizedBox(height: 8.h),
+                  
+                  GestureDetector(
+                    onTap: () async {
+                      final Uri url = Uri.parse('https://share.google/pKfmHR3lFxKz51G3J');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.star_sharp,
+                          color: AppColors.starGold,
+                          size: 24.r,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '4.9 176 Google reviews',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF1E3A8A), // Dark blue
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            decoration: TextDecoration.underline,
+                            decorationColor: const Color(0xFF1E3A8A),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
                   SizedBox(height: 24.h),
 

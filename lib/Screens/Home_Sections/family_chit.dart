@@ -34,6 +34,7 @@ class FamilyChitScreen extends StatefulWidget {
 class _FamilyChitScreenState extends State<FamilyChitScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
+  List<bool> selectedFamilyChits = [true, true, true];
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +87,7 @@ class _FamilyChitScreenState extends State<FamilyChitScreen> {
               padding: EdgeInsets.symmetric(vertical: 10.h),
               children: [
                 _buildFamilyChitCard(
+                  0,
                   'Harish',
                   'Unpriced',
                   '₹10,00,000',
@@ -94,6 +96,7 @@ class _FamilyChitScreenState extends State<FamilyChitScreen> {
                 ),
                 SizedBox(height: 10.h),
                 _buildFamilyChitCard(
+                  1,
                   'Harish',
                   'Unpriced',
                   '₹10,00,000',
@@ -102,6 +105,7 @@ class _FamilyChitScreenState extends State<FamilyChitScreen> {
                 ),
                 SizedBox(height: 10.h),
                 _buildFamilyChitCard(
+                  2,
                   'Harish',
                   'Unpriced',
                   '₹10,00,000',
@@ -118,312 +122,227 @@ class _FamilyChitScreenState extends State<FamilyChitScreen> {
   }
 
   Widget _buildFamilyChitCard(
+    int index,
     String name,
     String priceStatus,
     String chitValue,
     String startDate,
     String endDate,
   ) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 7.h),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2.w),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedFamilyChits[index] = !selectedFamilyChits[index];
+        });
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(14.r),
+          border: Border.all(
+            color: selectedFamilyChits[index]
+                ? AppColors.primary
+                : const Color(0x44FEF3C7),
+            width: 0.8.w,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(13.r),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Green Header Bar: Avatar, Member Name, Group Badge, Active Badge
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 11.h),
-              color: AppColors.primary,
-              child: Row(
-                children: [
-                  // White circular avatar with person icon
-                  Container(
-                    width: 36.w,
-                    height: 36.w,
-                    decoration: const BoxDecoration(
-                      color: AppColors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.person,
-                      color: AppColors.primary,
-                      size: 24.sp,
-                    ),
-                  ),
-                  SizedBox(width: 10.w),
-
-                  // Name
-                  Text(
-                    name,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-
-                  // Group badge "10 - L"
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 8.w,
-                      vertical: 2.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Text(
-                      '10 - L',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0x0A000000),
+              offset: const Offset(0, 2),
+              blurRadius: 6,
+              spreadRadius: -1,
+            ),
+            BoxShadow(
+              color: const Color(0x0F000000),
+              offset: const Offset(0, 8),
+              blurRadius: 24,
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(13.r),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Green Header Bar: Avatar, Member Name, Group Badge, Active Badge
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                color: AppColors.primary,
+                child: Row(
+                  children: [
+                    // White circular avatar with person icon
+                    Container(
+                      width: 28.w,
+                      height: 28.w,
+                      padding: EdgeInsets.all(4.w),
+                      decoration: const BoxDecoration(
+                        color: AppColors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Image.asset(
+                        'assets/images/payment_profile.png',
+                        width: 10.w,
+                        height: 10.w,
+                        fit: BoxFit.contain,
                       ),
                     ),
-                  ),
+                    SizedBox(width: 10.w),
 
-                  const Spacer(),
+                    // Name
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
 
-                  // Active status badge
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 4.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(14.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7.w,
-                          height: 7.w,
-                          decoration: const BoxDecoration(
-                            color: AppColors.activeGreenDot,
-                            shape: BoxShape.circle,
-                          ),
+                    // Group badge "10 - L"
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 2.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color(0x44FFFFFF),
+                        borderRadius: BorderRadius.circular(5.r),
+                      ),
+                      child: Text(
+                        '10 - L',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
                         ),
-                        SizedBox(width: 6.w),
-                        Text(
-                          'Active',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11.5.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
-            // Card Body (White section)
-            Padding(
-              padding: EdgeInsets.all(14.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Row 1: Chit Value & Unpriced Badge
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    const Spacer(),
+
+                    // Active status badge
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 4.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Color(0x55FFFFFF),
+                        borderRadius: BorderRadius.circular(14.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'CHIT VALUE',
-                            style: TextStyle(
-                              color: AppColors.textGrey,
-                              fontSize: 10.5.sp,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
+                          Icon(
+                            Icons.circle,
+                            color: Color(0xFF00A859),
+                            size: 10.w,
                           ),
-                          SizedBox(height: 3.h),
+                          SizedBox(width: 6.w),
                           Text(
-                            chitValue,
+                            'Active',
                             style: TextStyle(
-                              color: AppColors.textBody,
-                              fontSize: 17.sp,
-                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 11.5.sp,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
+                    ),
+                    SizedBox(width: 10.w),
 
-                      // Unpriced Pill Badge
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10.w,
-                          vertical: 4.h,
+                    // Checkbox
+                    Container(
+                      width: 22.w,
+                      height: 22.w,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(6.r),
+                        border: Border.all(
+                          color: AppColors.white,
+                          width: 1.6.w,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.unpricedBg,
-                          borderRadius: BorderRadius.circular(16.r),
-                          border: Border.all(
-                            color: AppColors.unpricedBorder,
-                            width: 1.0.w,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        color: selectedFamilyChits[index]
+                            ? AppColors.white
+                            : Colors.transparent,
+                      ),
+                      child: selectedFamilyChits[index]
+                          ? Icon(
+                              Icons.check,
+                              size: 15.sp,
+                              color: AppColors.primary,
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Card Body (White section)
+              Padding(
+                padding: EdgeInsets.all(14.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Row 1: Chit Value & Unpriced Badge
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              color: AppColors.unpricedText,
-                              size: 13.sp,
-                            ),
-                            SizedBox(width: 4.w),
                             Text(
-                              priceStatus,
+                              'CHIT VALUE',
                               style: TextStyle(
-                                color: AppColors.unpricedText,
-                                fontSize: 11.5.sp,
+                                color: Color(0xFF6B7280),
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 3.h),
+                            Text(
+                              chitValue,
+                              style: TextStyle(
+                                color: AppColors.textBody,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
 
-                  SizedBox(height: 12.h),
-
-                  // Row 2: Start Date & End Date Container Box
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 8.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(10.r),
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 0.8.w,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Left: Start Date
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 28.w,
-                                height: 28.w,
-                                decoration: BoxDecoration(
-                                  color: AppColors.startCalBg,
-                                  borderRadius: BorderRadius.circular(7.r),
-                                ),
-                                child: Icon(
-                                  Icons.calendar_today_outlined,
-                                  color: AppColors.startCalIcon,
-                                  size: 14.sp,
-                                ),
-                              ),
-                              SizedBox(width: 8.w),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'START',
-                                      style: TextStyle(
-                                        color: AppColors.textLightGrey,
-                                        fontSize: 9.5.sp,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      startDate,
-                                      style: TextStyle(
-                                        color: AppColors.textDark,
-                                        fontSize: 11.5.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Divider
+                        // Unpriced Pill Badge
                         Container(
-                          height: 26.h,
-                          width: 1.w,
-                          color: const Color(0xFFE2E8F0),
-                          margin: EdgeInsets.symmetric(horizontal: 8.w),
-                        ),
-
-                        // Right: End Date
-                        Expanded(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 10.w,
+                            vertical: 4.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(0xFFFFF2E8),
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(
+                              color: Color(0xFFFFE0CC),
+                              width: 1.0.w,
+                            ),
+                          ),
                           child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                width: 28.w,
-                                height: 28.w,
-                                decoration: BoxDecoration(
-                                  color: AppColors.endCalBg,
-                                  borderRadius: BorderRadius.circular(7.r),
-                                ),
-                                child: Icon(
-                                  Icons.calendar_today_outlined,
-                                  color: AppColors.endCalIcon,
-                                  size: 14.sp,
-                                ),
+                              Icon(
+                                Icons.schedule_rounded,
+                                color: Color(0xFFE05A17),
+                                size: 13.sp,
                               ),
-                              SizedBox(width: 8.w),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'END',
-                                      style: TextStyle(
-                                        color: AppColors.textLightGrey,
-                                        fontSize: 9.5.sp,
-                                        fontWeight: FontWeight.w600,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      endDate,
-                                      style: TextStyle(
-                                        color: AppColors.textDark,
-                                        fontSize: 11.5.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                              SizedBox(width: 4.w),
+                              Text(
+                                priceStatus,
+                                style: TextStyle(
+                                  color: Color(0xFFE05A17),
+                                  fontSize: 11.5.sp,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
@@ -431,11 +350,143 @@ class _FamilyChitScreenState extends State<FamilyChitScreen> {
                         ),
                       ],
                     ),
-                  ),
-                ],
+
+                    SizedBox(height: 10.h),
+
+                    // Row 2: Start Date & End Date Container Box
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 10.w,
+                        vertical: 8.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9FAFB),
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(
+                          color: const Color(0xFFF3F4F6),
+                          width: 1.w,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // Left: Start Date
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28.w,
+                                  height: 28.w,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(7.r),
+                                    border: Border.all(
+                                      color: Color(0xFFDBEAFE),
+                                      width: 1.w,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: Color(0xFF0D6EFD),
+                                    size: 14.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 10.w),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'START',
+                                        style: TextStyle(
+                                          color: AppColors.textLightGrey,
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        startDate,
+                                        style: TextStyle(
+                                          color: AppColors.textDark,
+                                          fontSize: 11.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Divider
+                          Container(
+                            height: 24.h,
+                            width: 1.w,
+                            color: const Color(0xFFE5E7EB),
+                            margin: EdgeInsets.symmetric(horizontal: 8.w),
+                          ),
+
+                          // Right: End Date
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28.w,
+                                  height: 28.w,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFFAF5FF),
+                                    borderRadius: BorderRadius.circular(7.r),
+                                    border: Border.all(color: Color(0xFFF3E8FF))
+                                  ),
+                                  child: Icon(
+                                    Icons.calendar_today_outlined,
+                                    color: Color(0xFFA855F7),
+                                    size: 14.sp,
+                                  ),
+                                ),
+                                SizedBox(width: 8.w),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'END',
+                                        style: TextStyle(
+                                          color: AppColors.textLightGrey,
+                                          fontSize: 10.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      SizedBox(height: 2.h),
+                                      Text(
+                                        endDate,
+                                        style: TextStyle(
+                                          color: AppColors.textDark,
+                                          fontSize: 11.5.sp,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

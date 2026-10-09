@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/constants/app_colors.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
-import 'payment_method.dart';
+import 'payment_proof.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -167,7 +167,7 @@ class _ReviewPayScreenState extends State<ReviewPayScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const PaymentMethodScreen()),
+                  MaterialPageRoute(builder: (context) => const PaymentProofScreen()),
                 );
               },
               child: Container(

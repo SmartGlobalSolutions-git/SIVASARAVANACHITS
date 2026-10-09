@@ -6,6 +6,7 @@ import '../../constants/app_colors.dart';
 
 import 'package:siva_saravana/services/profile_view_api.dart';
 import '../../services/help_support_api.dart';
+import '../../services/shared_prefs_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'drawers_screen.dart';
 
@@ -47,15 +48,25 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
   }
 
   Future<void> _fetchUserName() async {
-    final response = await ProfileViewApiService.fetchProfile();
-    if (mounted) {
-      setState(() {
-        if (response != null && response['error'] == false) {
-          _userName = response['profile']?['name']?.toString() ?? 'User';
-        } else {
-          _userName = 'User';
-        }
-      });
+    final savedName = await SharedPrefsHelper.getUserName();
+    if (savedName.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _userName = savedName;
+        });
+      }
+    } else {
+      final response = await ProfileViewApiService.fetchProfile();
+      if (mounted) {
+        setState(() {
+          if (response != null && response['error'] == false) {
+            _userName = response['profile']?['name']?.toString() ?? 'User';
+            SharedPrefsHelper.saveUserName(_userName);
+          } else {
+            _userName = 'User';
+          }
+        });
+      }
     }
   }
 

@@ -10,6 +10,7 @@ import 'package:siva_saravana/Screens/Prebitting/prebid_detail.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'package:intl/intl.dart';
 import '../../services/profile_view_api.dart';
+import '../../services/shared_prefs_helper.dart';
 import 'drawers_screen.dart';
 
 class MyChitDetailScreen extends StatefulWidget {
@@ -93,13 +94,23 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
   }
 
   Future<void> _fetchProfileName() async {
-    final response = await ProfileViewApiService.fetchProfile();
-    if (mounted && response != null && response['error'] == false) {
-      final profile = response['profile'];
-      if (profile != null && profile['name'] != null) {
+    final savedName = await SharedPrefsHelper.getUserName();
+    if (savedName.isNotEmpty) {
+      if (mounted) {
         setState(() {
-          _userName = profile['name'];
+          _userName = savedName;
         });
+      }
+    } else {
+      final response = await ProfileViewApiService.fetchProfile();
+      if (mounted && response != null && response['error'] == false) {
+        final profile = response['profile'];
+        if (profile != null && profile['name'] != null) {
+          setState(() {
+            _userName = profile['name'];
+          });
+          SharedPrefsHelper.saveUserName(profile['name']);
+        }
       }
     }
   }

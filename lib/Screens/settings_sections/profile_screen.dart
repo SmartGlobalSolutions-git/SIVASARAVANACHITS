@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 import '../../services/profile_view_api.dart';
+import '../../services/shared_prefs_helper.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -31,15 +32,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _fetchProfile() async {
-    final response = await ProfileViewApiService.fetchProfile();
-    setState(() {
-      _isLoading = false;
-      if (response != null && response['error'] == false) {
-        _profileData = response['profile'];
-      } else {
-        _errorMessage = response?['error_msg'] ?? 'Failed to load profile';
+    final savedName = await SharedPrefsHelper.getUserName();
+    if (savedName.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _profileData = {'name': savedName};
+        });
       }
-    });
+    }
+
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (response != null && response['error'] == false) {
+          _profileData = response['profile'];
+          if (_profileData != null && _profileData!['name'] != null) {
+            SharedPrefsHelper.saveUserName(_profileData!['name']);
+          }
+        } else {
+          if (savedName.isEmpty) {
+            _errorMessage = response?['error_msg'] ?? 'Failed to load profile';
+          }
+        }
+      });
+    }
   }
 
   @override

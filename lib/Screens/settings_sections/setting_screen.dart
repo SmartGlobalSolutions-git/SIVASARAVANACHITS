@@ -10,6 +10,8 @@ import 'faq.dart';
 import 'about_us.dart';
 import '../login_sections/user_type_selection_screen.dart';
 import '../../services/shared_prefs_helper.dart';
+import '../../services/chit_scheme_api.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -27,6 +29,32 @@ class SettingScreen extends StatefulWidget {
 class _SettingScreenState extends State<SettingScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
+  
+  String _appVersion = 'Loading...';
+  String _selectedLanguage = 'English';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAppVersion();
+  }
+
+  Future<void> _fetchAppVersion() async {
+    try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = packageInfo.version;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _appVersion = 'Unknown';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,8 +137,8 @@ class _SettingScreenState extends State<SettingScreen> {
                 _SettingsTile(
                   assetPath: 'assets/settings/language.png',
                   title: 'Language',
-                  trailingText: 'English',
-                  onTap: () => _handleItemTap(context, 'Language'),
+                  trailingText: _selectedLanguage,
+                  onTap: () => _showLanguageBottomSheet(context),
                 ),
               ]),
               SizedBox(height: 16.h),
@@ -191,9 +219,9 @@ class _SettingScreenState extends State<SettingScreen> {
                 _SettingsTile(
                   assetPath: 'assets/settings/app_version.png',
                   title: 'App Version',
-                  trailingText: '1.0.0',
+                  trailingText: _appVersion,
                   showChevron: false,
-                  onTap: () => _handleItemTap(context, 'App Version 1.0.0'),
+                  onTap: () {},
                 ),
               ]),
               SizedBox(height: 16.h),
@@ -305,6 +333,83 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
+  void _showLanguageBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (BuildContext ctx) {
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Select Language',
+                style: GoogleFonts.inter(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              ListTile(
+                title: Text(
+                  'English',
+                  style: GoogleFonts.inter(
+                    fontSize: 16.sp,
+                    color: _selectedLanguage == 'English'
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    fontWeight: _selectedLanguage == 'English'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: _selectedLanguage == 'English'
+                    ? Icon(Icons.check_circle, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedLanguage = 'English';
+                  });
+                  Navigator.pop(ctx);
+                },
+              ),
+              const Divider(),
+              ListTile(
+                title: Text(
+                  'Tamil',
+                  style: GoogleFonts.inter(
+                    fontSize: 16.sp,
+                    color: _selectedLanguage == 'Tamil'
+                        ? AppColors.primary
+                        : AppColors.textPrimary,
+                    fontWeight: _selectedLanguage == 'Tamil'
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: _selectedLanguage == 'Tamil'
+                    ? Icon(Icons.check_circle, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedLanguage = 'Tamil';
+                  });
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -342,6 +447,9 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                // Call the logout API first
+                await ChitSchemeApiService.logout();
+                
                 Navigator.of(ctx).pop();
                 await SharedPrefsHelper.clearPreferences();
                 if (!context.mounted) return;

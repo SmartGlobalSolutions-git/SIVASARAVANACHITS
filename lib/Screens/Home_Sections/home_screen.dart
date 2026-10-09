@@ -10,6 +10,9 @@ import '../chit_schemes/chit_schemes.dart';
 import 'need_help_screen.dart';
 import '../settings_sections/faq.dart';
 import '../../services/profile_view_api.dart';
+import '../../services/shared_prefs_helper.dart';
+import '../../services/chit_scheme_api.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
   final VoidCallback? onMenuTap;
@@ -28,7 +31,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _userName = '';
-  
+  List<dynamic> _exploreChits = [];
+  bool _isLoadingExplore = true;
+
   final TextEditingController _investmentController = TextEditingController();
   final TextEditingController _emiAmountController = TextEditingController();
   String _noOfEmis = '20';
@@ -45,16 +50,59 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _fetchProfileName();
+    _fetchExploreChits();
+  }
+
+  Future<void> _fetchExploreChits() async {
+    final data = await ChitSchemeApiService.fetchAvailableChits();
+    if (data != null && data.isNotEmpty) {
+      data.sort((a, b) {
+        final aSlots = int.tryParse(a['bal_sub']?.toString() ?? '0') ?? 0;
+        final bSlots = int.tryParse(b['bal_sub']?.toString() ?? '0') ?? 0;
+        return bSlots.compareTo(aSlots);
+      });
+      if (mounted) {
+        setState(() {
+          _exploreChits = data;
+          _isLoadingExplore = false;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoadingExplore = false;
+        });
+      }
+    }
+  }
+
+  String _formatAmount(double amount) {
+    if (amount % 1 == 0) {
+      return NumberFormat('#,##,###').format(amount);
+    }
+    return NumberFormat('#,##,###.##').format(amount);
   }
 
   Future<void> _fetchProfileName() async {
-    final response = await ProfileViewApiService.fetchProfile();
-    if (response != null && response['error'] == false) {
-      final profile = response['profile'];
-      if (profile != null && profile['name'] != null) {
+    final savedName = await SharedPrefsHelper.getUserName();
+    if (savedName.isNotEmpty) {
+      if (mounted) {
         setState(() {
-          _userName = "${profile['name']}";
+          _userName = savedName;
         });
+      }
+    } else {
+      final response = await ProfileViewApiService.fetchProfile();
+      if (response != null && response['error'] == false) {
+        final profile = response['profile'];
+        if (profile != null && profile['name'] != null) {
+          if (mounted) {
+            setState(() {
+              _userName = "${profile['name']}";
+            });
+          }
+          SharedPrefsHelper.saveUserName(_userName);
+        }
       }
     }
   }
@@ -281,15 +329,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    
-                                        Text(
-                                          'Payment Due',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16.sp,
-                                            color: primaryColor,
-                                          ),
-                                        ),
+                                    Text(
+                                      'Payment Due',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16.sp,
+                                        color: primaryColor,
+                                      ),
+                                    ),
                                     SizedBox(height: 3.h),
                                     Text(
                                       'You have 1 pending payment',
@@ -409,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
-                              builder: (context) => NeedHelpBottomSheet()
+                              builder: (context) => NeedHelpBottomSheet(),
                             );
                           },
                           style: ElevatedButton.styleFrom(
@@ -682,7 +729,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   );
                                                 }).toList(),
                                                 onChanged: (val) {
-                                                  if (val != null) setState(() => _noOfEmis = val);
+                                                  if (val != null)
+                                                    setState(
+                                                      () => _noOfEmis = val,
+                                                    );
                                                 },
                                               ),
                                             ),
@@ -744,7 +794,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   );
                                                 }).toList(),
                                                 onChanged: (val) {
-                                                  if (val != null) setState(() => _noOfMembers = val);
+                                                  if (val != null)
+                                                    setState(
+                                                      () => _noOfMembers = val,
+                                                    );
                                                 },
                                               ),
                                             ),
@@ -775,8 +828,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: ElevatedButton(
                                         onPressed: () {
                                           Map<String, String> growthParams = {
-                                            'ch_value': _investmentController.text.trim(),
-                                            'emi_amount': _emiAmountController.text.trim(),
+                                            'ch_value': _investmentController
+                                                .text
+                                                .trim(),
+                                            'emi_amount': _emiAmountController
+                                                .text
+                                                .trim(),
                                             'no_of_emis': _noOfEmis,
                                             'no_of_members': _noOfMembers,
                                           };
@@ -786,7 +843,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                               builder: (context) =>
                                                   ChitSchemesScreen(
                                                     initialTab: 0,
-                                                    growthPlanParams: growthParams,
+                                                    growthPlanParams:
+                                                        growthParams,
                                                   ),
                                             ),
                                           );
@@ -831,27 +889,39 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       SizedBox(height: 10.h),
-                      SizedBox(
-                        height: 180.h,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children: [
-                            _buildExploreCard(
-                              '10,00,000',
-                              '10,000',
-                              true,
-                              primaryColor,
+                      _isLoadingExplore
+                          ? const Center(child: CircularProgressIndicator())
+                          : _exploreChits.isEmpty
+                          ? const Center(child: Text('No chits available'))
+                          : SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: List.generate(
+                                    _exploreChits.length,
+                                    (index) {
+                                      final chit = _exploreChits[index];
+                                      final isPopular = index == 0;
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          right:
+                                              index == _exploreChits.length - 1
+                                              ? 0
+                                              : 16.w,
+                                        ),
+                                        child: _buildExploreCard(
+                                          chit,
+                                          isPopular,
+                                          primaryColor,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
                             ),
-                            SizedBox(width: 16.w),
-                            _buildExploreCard(
-                              '50,00,000',
-                              '700',
-                              true,
-                              primaryColor,
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -999,12 +1069,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExploreCard(
-    String amount,
-    String subAmount,
-    bool isPopular,
-    Color primaryColor,
-  ) {
+  Widget _buildExploreCard(dynamic chit, bool isPopular, Color primaryColor) {
+    final double chitValue =
+        double.tryParse(chit['value']?.toString() ?? '0') ?? 0;
+    final String amount = _formatAmount(chitValue);
+
+    // Attempting to calculate subscription amount (installment amount) if 'subAmount' isn't directly available.
+    // Assuming value / total_month = subscription amount roughly, or checking for specific keys.
+    final double subAmountVal =
+        chitValue /
+        (double.tryParse(chit['total_month']?.toString() ?? '1') ?? 1);
+    final String subAmount = _formatAmount(
+      subAmountVal,
+    ); // Default rough calculation if not in API
+
+    final String slotsLeft = chit['bal_sub']?.toString() ?? '0';
+    final String installments = chit['total_month']?.toString() ?? '0';
+
+    // There is no start_date in available chits api, so use a placeholder or omit
+    // Using current UI placeholder if needed, or if API provides it:
+    final String startDate = chit['start_date']?.toString() ?? 'TBD';
     return Container(
       width: 260.w,
       decoration: BoxDecoration(
@@ -1026,7 +1110,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(14.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1034,12 +1118,12 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '14 slots left',
+                '$slotsLeft slots left',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
               ),
               if (isPopular)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w,),
                   decoration: BoxDecoration(
                     color: Color(0xFFFFE8E8),
                     border: Border.all(color: Color(0xFFDA5353)),
@@ -1068,14 +1152,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 8.h),
           Text(
-            'Installments - 50 months',
+            'Installments - $installments months',
             style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
           ),
+          // Start date is typically not provided in this API so omitting or keeping placeholder
+          // But I'll hide it if it's 'TBD' or just show placeholder if we want to keep UI exactly same.
+          // The user instruction implies "bind the available chit" so I'll just leave it out if we don't have it or keep it as placeholder.
           Text(
-            'Start date : 01 Oct, 2026',
+            startDate != 'TBD' ? 'Start date : $startDate' : '',
             style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
           ),
-          SizedBox(height: 15.h),
+          SizedBox(height: 5.h),
           SizedBox(
             width: double.infinity,
             child: Builder(

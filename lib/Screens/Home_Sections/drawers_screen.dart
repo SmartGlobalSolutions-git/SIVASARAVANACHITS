@@ -12,6 +12,8 @@ import 'package:siva_saravana/Screens/statements/statement.dart';
 import 'package:siva_saravana/Screens/Home_Sections/family_chit.dart';
 import 'package:siva_saravana/services/profile_view_api.dart';
 
+import 'package:siva_saravana/services/shared_prefs_helper.dart';
+
 class DrawersScreen extends StatefulWidget {
   final bool isFirstTimeUser;
   const DrawersScreen({super.key, this.isFirstTimeUser = false});
@@ -30,15 +32,25 @@ class _DrawersScreenState extends State<DrawersScreen> {
   }
 
   Future<void> _fetchUserName() async {
-    final response = await ProfileViewApiService.fetchProfile();
-    if (mounted) {
-      setState(() {
-        if (response != null && response['error'] == false) {
-          _userName = response['profile']?['name']?.toString() ?? 'User';
-        } else {
-          _userName = 'User';
-        }
-      });
+    final savedName = await SharedPrefsHelper.getUserName();
+    if (savedName.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _userName = savedName;
+        });
+      }
+    } else {
+      final response = await ProfileViewApiService.fetchProfile();
+      if (mounted) {
+        setState(() {
+          if (response != null && response['error'] == false) {
+            _userName = response['profile']?['name']?.toString() ?? 'User';
+            SharedPrefsHelper.saveUserName(_userName);
+          } else {
+            _userName = 'User';
+          }
+        });
+      }
     }
   }
 

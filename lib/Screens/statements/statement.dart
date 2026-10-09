@@ -16,21 +16,41 @@ class StatementScreen extends StatefulWidget {
 
 class _StatementScreenState extends State<StatementScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  final TextEditingController _chitIdController = TextEditingController();
   bool _isDrawerOpen = false;
   bool _isLoading = false;
+  bool _isFetchingChits = true;
+  List<dynamic> _chitList = [];
+  String? _selectedChitId;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchChitList();
+  }
+
+  Future<void> _fetchChitList() async {
+    final list = await ChitSchemeApiService.fetchCustomerChitIds();
+    if (mounted) {
+      setState(() {
+        _chitList = list ?? [];
+        if (_chitList.isNotEmpty) {
+          _selectedChitId = _chitList[0]['chit_id'].toString();
+        }
+        _isFetchingChits = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
-    _chitIdController.dispose();
     super.dispose();
   }
 
   void _onSubmit() async {
-    final chitId = _chitIdController.text.trim();
-    if (chitId.isEmpty) {
+    final chitId = _selectedChitId;
+    if (chitId == null || chitId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a Chit ID')),
+        const SnackBar(content: Text('Please select a Chit ID')),
       );
       return;
     }
@@ -120,22 +140,35 @@ class _StatementScreenState extends State<StatementScreen> {
                     Expanded(
                       child: Container(
                         height: 45.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8.r),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
-                        child: TextField(
-                          controller: _chitIdController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            hintText: 'Enter Chit ID :',
-                            hintStyle: TextStyle(fontSize: 13.sp, color: Colors.grey),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 12.h),
-                            suffixIcon: const Icon(Icons.search, color: Colors.grey),
-                          ),
-                        ),
+                        child: _isFetchingChits
+                            ? const Center(child: CircularProgressIndicator())
+                            : DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  dropdownColor: Colors.white,
+                                  value: _selectedChitId,
+                                  isExpanded: true,
+                                  hint: Text('Select Chit', style: TextStyle(fontSize: 13.sp, color: Colors.grey)),
+                                  items: _chitList.map((chit) {
+                                    final id = chit['chit_id'].toString();
+                                    final name = chit['grp_name']?.toString() ?? '';
+                                    return DropdownMenuItem<String>(
+                                      value: id,
+                                      child: Text('$name ($id)', style: TextStyle(fontSize: 14.sp)),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    setState(() {
+                                      _selectedChitId = val;
+                                    });
+                                  },
+                                ),
+                              ),
                       ),
                     ),
                   ],

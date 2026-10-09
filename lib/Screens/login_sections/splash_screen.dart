@@ -9,6 +9,10 @@ import '../../services/shared_prefs_helper.dart';
 import 'WelcomeScreen.dart';
 import '../main_wrapper.dart';
 import '../first_time_main_wrapper.dart';
+import '../../services/profile_view_api.dart';
+import '../../services/chit_scheme_api.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -23,6 +27,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
   late AnimationController _textController;
   late Animation<Offset> _slideAnimation;
+
+  bool _showUpdateUI = false;
+  String _downloadUrl = '';
+  String _updateMessage = '';
 
   @override
   void initState() {
@@ -102,6 +110,41 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     final token = await SharedPrefsHelper.getToken();
     final isNewUser = await SharedPrefsHelper.getIsNewUser();
 
+    if (token != null && token.isNotEmpty) {
+      final response = await ProfileViewApiService.fetchProfile();
+      if (response != null && response['error'] == false) {
+        final profile = response['profile'];
+        if (profile != null && profile['name'] != null) {
+          await SharedPrefsHelper.saveUserName(profile['name'].toString());
+        }
+      }
+    }
+
+    // Version Check
+    try {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      String currentVersion = packageInfo.version;
+      
+      final versionResponse = await ChitSchemeApiService.checkVersion(currentVersion);
+      if (versionResponse != null && versionResponse['error'] == false) {
+        String latestVersion = versionResponse['latest_version'] ?? '';
+        bool updateRequired = versionResponse['update_required'] ?? false;
+  
+        if (currentVersion != latestVersion || updateRequired) {
+          if (mounted) {
+            setState(() {
+              _showUpdateUI = true;
+              _downloadUrl = versionResponse['download_url'] ?? '';
+              _updateMessage = versionResponse['message'] ?? 'Please update the app to continue.';
+            });
+          }
+          return; // Halt further navigation
+        }
+      }
+    } catch (e) {
+      debugPrint('Version check failed: $e');
+    }
+
     await minimumDelay;
 
     if (mounted) {
@@ -180,6 +223,48 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 ],
               ),
             ),
+            if (_showUpdateUI)
+              Padding(
+                padding: EdgeInsets.only(top: 40.h),
+                child: Column(
+                  children: [
+                    Text(
+                      _updateMessage,
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 14.sp,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 16.h),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (_downloadUrl.isNotEmpty) {
+                          final uri = Uri.parse(_downloadUrl);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: constants.AppColors.primaryColor,
+                        padding: EdgeInsets.symmetric(horizontal: 32.w, vertical: 12.h),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24.r),
+                        ),
+                      ),
+                      child: Text(
+                        'Update Now',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

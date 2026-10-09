@@ -60,6 +60,18 @@ class SharedPrefsHelper {
     return prefs.getInt('cus_id');
   }
 
+  // Save User Name
+  static Future<void> saveUserName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_name', name);
+  }
+
+  // Get User Name
+  static Future<String> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_name') ?? '';
+  }
+
   // Save Is New User
   static Future<void> saveIsNewUser(bool isNewUser) async {
     final prefs = await SharedPreferences.getInstance();

@@ -20,6 +20,63 @@ class ChitSchemeApiService {
     };
   }
 
+  // 5007 - Logout
+  static Future<Map<String, dynamic>?> logout() async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      requestBody['type'] = '5007';
+
+      debugPrint('--- LOGOUT API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- LOGOUT API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        return decodedResponse;
+      }
+    } catch (e) {
+      debugPrint('Error logging out: $e');
+    }
+    return null;
+  }
+
+  // 5017 - Check App Version
+  static Future<Map<String, dynamic>?> checkVersion(String currentVersion) async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      requestBody['type'] = '5017';
+      requestBody['version'] = currentVersion;
+
+      debugPrint('--- CHECK VERSION API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- CHECK VERSION API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decodedResponse = json.decode(response.body);
+        if (decodedResponse['error'] == false) {
+          return decodedResponse;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking version: $e');
+    }
+    return null;
+  }
+
   // 5003 - Chit Schemes List
   static Future<List<dynamic>?> fetchChitSchemes() async {
     try {
@@ -301,6 +358,38 @@ class ChitSchemeApiService {
       return null;
     } catch (e) {
       debugPrint('Mini Statement API Error: $e');
+      return null;
+    }
+  }
+
+  // 5018 - Customer Chits Dropdown
+  static Future<List<dynamic>?> fetchCustomerChitIds() async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      final cusId = await SharedPrefsHelper.getCusId();
+      requestBody['type'] = '5018';
+      if (cusId != null) requestBody['cus_id'] = cusId.toString();
+
+      debugPrint('--- CUSTOMER CHIT IDS API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- CUSTOMER CHIT IDS API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['error'] == false && decoded['data'] != null) {
+          return decoded['data'];
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Customer Chit IDs API Error: $e');
       return null;
     }
   }

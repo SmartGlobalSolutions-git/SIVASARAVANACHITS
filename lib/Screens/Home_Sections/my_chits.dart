@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../constants/app_colors.dart';
 import 'my_chit_detail.dart';
 import '../../services/profile_view_api.dart';
+import '../../services/shared_prefs_helper.dart';
 
 class MyChitsScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -31,13 +32,23 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
   }
 
   Future<void> _fetchProfileName() async {
-    final response = await ProfileViewApiService.fetchProfile();
-    if (mounted && response != null && response['error'] == false) {
-      final profile = response['profile'];
-      if (profile != null && profile['name'] != null) {
+    final savedName = await SharedPrefsHelper.getUserName();
+    if (savedName.isNotEmpty) {
+      if (mounted) {
         setState(() {
-          _userName = profile['name'];
+          _userName = savedName;
         });
+      }
+    } else {
+      final response = await ProfileViewApiService.fetchProfile();
+      if (mounted && response != null && response['error'] == false) {
+        final profile = response['profile'];
+        if (profile != null && profile['name'] != null) {
+          setState(() {
+            _userName = profile['name'];
+          });
+          SharedPrefsHelper.saveUserName(profile['name']);
+        }
       }
     }
   }
