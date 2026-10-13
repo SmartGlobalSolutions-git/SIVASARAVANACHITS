@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../services/translation_service.dart';
 import '../main_wrapper.dart';
 
 import '../Home_Sections/drawers_screen.dart';
@@ -54,7 +55,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             'Payment Submitted',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -63,182 +64,188 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
               color: Colors.black,
             ),
           ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-              child: Column(
-                children: [
-                  Image.asset('assets/pay gif.gif', width: 150),
-                  SizedBox(height: 5.h),
-                  Text(
-                    'Payment Proof Submitted!',
-                    style: TextStyle(
-                      fontSize: 22.sp,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2C3E8A), // Deep blue
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  Text(
-                    'Your payment proof has been submitted successfully.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                  SizedBox(height: 30.h),
-                  
-                  // Summary Card
-                  Container(
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15.r),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Column(
-                      children: [
-                        _buildSummaryRow('Amount Submitted', '₹ 25,000', isAmount: true),
-                        SizedBox(height: 15.h),
-                        _buildSummaryRowWithDot('Payment Mode', 'NEFT / RTGS'),
-                        SizedBox(height: 15.h),
-                        _buildSummaryRow('Reference / UTR', 'UTR849204820194'),
-                        SizedBox(height: 15.h),
-                        _buildSummaryRow('Submitted On', '20 Aug 2025, 09:41 AM'),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-
-                  // Verification Info Card
-                  Container(
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF4F8FE), // Light blue tint
-                      borderRadius: BorderRadius.circular(15.r),
-                      border: Border.all(
-                        color: const Color(0xFFB3CDE0),
-                        width: 1.5,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                child: Column(
+                  children: [
+                    Image.asset('assets/pay gif.gif', width: 150),
+                    SizedBox(height: 5.h),
+                    TrText(
+                      'Payment Proof Submitted!',
+                      style: TextStyle(
+                        fontSize: 22.sp,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2C3E8A), // Deep blue
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(15.r),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: Text(
-                            'After Verification by Admin',
-                            style: TextStyle(
-                              color: const Color(0xFF2C3E8A),
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                    SizedBox(height: 10.h),
+                    TrText(
+                      'Your payment proof has been submitted successfully.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 30.h),
+
+                    // Summary Card
+                    Container(
+                      padding: EdgeInsets.all(20.w),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15.r),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildSummaryRow('Amount Submitted', '₹ 25,000', isAmount: true),
+                          SizedBox(height: 15.h),
+                          _buildSummaryRowWithDot('Payment Mode', 'NEFT / RTGS'),
+                          SizedBox(height: 15.h),
+                          _buildSummaryRow('Reference / UTR', 'UTR849204820194'),
+                          SizedBox(height: 15.h),
+                          _buildSummaryRow('Submitted On', '20 Aug 2025, 09:41 AM'),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+
+                    // Verification Info Card
+                    Container(
+                      padding: EdgeInsets.all(20.w),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF4F8FE), // Light blue tint
+                        borderRadius: BorderRadius.circular(15.r),
+                        border: Border.all(
+                          color: const Color(0xFFB3CDE0),
+                          width: 1.5,
                         ),
-                        SizedBox(height: 15.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.check_circle, color: const Color(0xFF0C8A4B), size: 18.sp),
-                            SizedBox(width: 8.w),
-                            Text(
-                              'Payment Successful & Chit Credited',
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15.r),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: TrText(
+                              'After Verification by Admin',
                               style: TextStyle(
-                                color: const Color(0xFF0C8A4B),
-                                fontSize: 13.sp,
+                                color: const Color(0xFF2C3E8A),
+                                fontSize: 12.sp,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          'An SMS & in-app confirmation will be dispatched\nautomatically.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 11.sp,
-                            height: 1.4,
                           ),
-                        ),
-                      ],
+                          SizedBox(height: 15.h),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.check_circle, color: const Color(0xFF0C8A4B), size: 18.sp),
+                              SizedBox(width: 8.w),
+                              Flexible(
+                                child: TrText(
+                                  'Payment Successful & Chit Credited',
+                                  style: TextStyle(
+                                    color: const Color(0xFF0C8A4B),
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8.h),
+                          TrText(
+                            'An SMS & in-app confirmation will be dispatched\nautomatically.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 11.sp,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom Area
+            Container(
+              padding: EdgeInsets.only(top: 20.h, bottom: 30.h, left: 20.w, right: 20.w),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const MainWrapper()),
+                        (route) => false,
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: const Color(0xFF0C8A4B), width: 1.5),
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      alignment: Alignment.center,
+                      child: TrText(
+                        'Back to Home',
+                        style: TextStyle(
+                          color: const Color(0xFF0C8A4B),
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: TrText(
+                          'Have questions regarding your transfer? ',
+                          style: TextStyle(color: Colors.grey.shade600, fontSize: 11.sp),
+                        ),
+                      ),
+                      TrText(
+                        'Contact Support',
+                        style: TextStyle(color: Colors.grey.shade800, fontWeight: FontWeight.bold, fontSize: 11.sp),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ),
-          
-          // Bottom Area
-          Container(
-            padding: EdgeInsets.only(top: 20.h, bottom: 30.h, left: 20.w, right: 20.w),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const MainWrapper()),
-                      (route) => false,
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: const Color(0xFF0C8A4B), width: 1.5),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Back to Home',
-                      style: TextStyle(
-                        color: const Color(0xFF0C8A4B),
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                RichText(
-                  text: TextSpan(
-                    text: 'Have questions regarding your transfer? ',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 11.sp),
-                    children: [
-                      TextSpan(
-                        text: 'Contact Support',
-                        style: TextStyle(color: Colors.grey.shade800, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   Widget _buildSummaryRow(String label, String value, {bool isAmount = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        TrText(
           label,
           style: TextStyle(color: Colors.grey.shade600, fontSize: 13.sp),
         ),
@@ -258,7 +265,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
+        TrText(
           label,
           style: TextStyle(color: Colors.grey.shade600, fontSize: 13.sp),
         ),
@@ -273,7 +280,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen> {
               ),
             ),
             SizedBox(width: 8.w),
-            Text(
+            TrText(
               value,
               style: TextStyle(
                 color: Colors.black87,

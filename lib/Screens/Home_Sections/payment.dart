@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
+import '../../services/chit_scheme_api.dart';
+import '../../services/payment_api.dart';
+import '../../services/translation_service.dart';
 import '../payment_sections/pending_history.dart';
 import '../payment_sections/approval_history.dart';
 import '../payment_sections/payment_method.dart';
@@ -48,8 +52,98 @@ class _PaymentScreenState extends State<PaymentScreen> {
   bool _isDrawerOpen = false;
   bool isMyChitsOverview = true;
   bool isIndividualChit = true;
-  List<bool> selectedIndividualChits = [true, true];
-  List<bool> selectedFamilyChits = [true, true, true];
+  bool _isLoading = true;
+  List<dynamic> _individualChits = [];
+  List<dynamic> _familyChits = [];
+  List<bool> _selectedIndividualChits = [];
+  List<bool> _selectedFamilyChits = [];
+  bool _isHistoryLoading = false;
+  List<dynamic> _historyPayments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPaymentChits();
+  }
+
+  Future<void> _fetchPaymentHistory() async {
+    setState(() => _isHistoryLoading = true);
+    final response = await PaymentApiService.fetchPaymentHistory();
+    if (mounted) {
+      if (response != null && response['payments'] is List) {
+        setState(() {
+          _historyPayments = List<dynamic>.from(response['payments']);
+          _isHistoryLoading = false;
+        });
+      } else {
+        setState(() {
+          _historyPayments = [];
+          _isHistoryLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _fetchPaymentChits() async {
+    setState(() => _isLoading = true);
+    final response = await ChitSchemeApiService.fetchPaymentChits();
+    if (mounted) {
+      if (response != null) {
+        final List<dynamic> ind = response['individual_chits'] is List
+            ? List<dynamic>.from(response['individual_chits'])
+            : [];
+        final List<dynamic> fam = response['family_chits'] is List
+            ? List<dynamic>.from(response['family_chits'])
+            : [];
+        setState(() {
+          _individualChits = ind;
+          _familyChits = fam;
+          _selectedIndividualChits = List.generate(ind.length, (_) => true);
+          _selectedFamilyChits = List.generate(fam.length, (_) => true);
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _formatAmount(dynamic amount) {
+    if (amount == null) return '0';
+    try {
+      final formatter = NumberFormat('#,##,###');
+      if (amount is int) return formatter.format(amount);
+      if (amount is double) return formatter.format(amount);
+      if (amount is String) return formatter.format(double.parse(amount));
+    } catch (e) {
+      return amount.toString();
+    }
+    return amount.toString();
+  }
+
+  double _calculateTotalAmount(List<dynamic> chits, List<bool> selected) {
+    double total = 0;
+    for (int i = 0; i < chits.length; i++) {
+      if (i < selected.length && selected[i]) {
+        final rb = chits[i]['running_balance'];
+        if (rb != null) {
+          total += double.tryParse(rb.toString()) ?? 0;
+        }
+      }
+    }
+    return total;
+  }
+
+  String _formatChitDates(dynamic chit) {
+    final start = chit['start_date_display'] ?? chit['start_date'];
+    final end = chit['end_date_display'] ?? chit['end_date'];
+    if (start == null && end == null) return '-';
+    if (start == null) return '-\n$end';
+    if (end == null) return '$start\n-';
+    return '$start -\n$end';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +181,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
           titleSpacing: 0,
           surfaceTintColor: Colors.transparent,
-          title: Text(
+          title: TrText(
             'Payment',
             style: TextStyle(
               color: AppColors.textDark,
@@ -124,7 +218,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                             ),
                             alignment: Alignment.center,
-                            child: Text(
+                            child: TrText(
                               'My Chits Overview',
                               style: TextStyle(
                                 color: isMyChitsOverview
@@ -141,6 +235,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         child: GestureDetector(
                           onTap: () {
                             setState(() => isMyChitsOverview = false);
+                            if (_historyPayments.isEmpty) {
+                              _fetchPaymentHistory();
+                            }
                           },
                           child: Container(
                             padding: EdgeInsets.symmetric(vertical: 15.h),
@@ -158,7 +255,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               ),
                             ),
                             alignment: Alignment.center,
-                            child: Text(
+                            child: TrText(
                               'Payment History',
                               style: TextStyle(
                                 color: !isMyChitsOverview
@@ -196,15 +293,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 border: Border.all(color: AppColors.primary),
                               ),
                               alignment: Alignment.center,
-                              child: Text(
-                                'Individual Chit',
-                                style: TextStyle(
-                                  color: isIndividualChit
-                                      ? AppColors.white
-                                      : AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14.sp,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TrText(
+                                    'Individual Chit',
+                                    style: TextStyle(
+                                      color: isIndividualChit
+                                          ? AppColors.white
+                                          : AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                  if (_individualChits.isNotEmpty)
+                                    Text(
+                                      ' (${_individualChits.length})',
+                                      style: TextStyle(
+                                        color: isIndividualChit
+                                            ? AppColors.white
+                                            : AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
@@ -224,15 +337,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 border: Border.all(color: AppColors.primary),
                               ),
                               alignment: Alignment.center,
-                              child: Text(
-                                'Family Chit',
-                                style: TextStyle(
-                                  color: !isIndividualChit
-                                      ? AppColors.white
-                                      : AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 14.sp,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TrText(
+                                    'Family Chit',
+                                    style: TextStyle(
+                                      color: !isIndividualChit
+                                          ? AppColors.white
+                                          : AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                  if (_familyChits.isNotEmpty)
+                                    Text(
+                                      ' (${_familyChits.length})',
+                                      style: TextStyle(
+                                        color: !isIndividualChit
+                                            ? AppColors.white
+                                            : AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
@@ -247,100 +376,92 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 Expanded(
                   child: !isMyChitsOverview
                       ? _buildPaymentHistoryList()
-                      : (isIndividualChit
-                            ? ListView(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16.w,
-                                  vertical: 5.h,
-                                ),
-                                children: [
-                                  _buildIndividualChitCard(0),
-                                  SizedBox(height: 15.h),
-                                  _buildIndividualChitCard(1),
-                                  SizedBox(height: 20.h),
-                                  Container(
-                                    padding: EdgeInsets.only(
-                                      top: 10.h,
-                                      bottom: 20.h,
-                                    ),
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          'Pay Selected( ${selectedIndividualChits.where((e) => e).length} )',
+                      : _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                          onRefresh: _fetchPaymentChits,
+                          child: isIndividualChit
+                              ? (_individualChits.isEmpty
+                                    ? Center(
+                                        child: TrText(
+                                          'No individual chits found.',
                                           style: TextStyle(
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.textDark,
+                                            fontSize: 14.sp,
+                                            color: AppColors.textGrey,
                                           ),
                                         ),
-                                        SizedBox(height: 15.h),
-                                        GestureDetector(
-                                          onTap: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    const PaymentMethodScreen(),
+                                      )
+                                    : ListView(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 16.w,
+                                          vertical: 5.h,
+                                        ),
+                                        children: [
+                                          ...List.generate(
+                                            _individualChits.length,
+                                            (index) => Padding(
+                                              padding: EdgeInsets.only(
+                                                bottom: 15.h,
                                               ),
-                                            );
-                                          },
-                                          child: Container(
-                                            width: double.infinity,
+                                              child: _buildIndividualChitCard(
+                                                index,
+                                                _individualChits[index],
+                                              ),
+                                            ),
+                                          ),
+                                          SizedBox(height: 5.h),
+                                          _buildPayBottomBar(
+                                            _selectedIndividualChits
+                                                .where((e) => e)
+                                                .length,
+                                            _calculateTotalAmount(
+                                              _individualChits,
+                                              _selectedIndividualChits,
+                                            ),
+                                          ),
+                                        ],
+                                      ))
+                              : (_familyChits.isEmpty
+                                    ? Center(
+                                        child: TrText(
+                                          'No family chits found.',
+                                          style: TextStyle(
+                                            fontSize: 14.sp,
+                                            color: AppColors.textGrey,
+                                          ),
+                                        ),
+                                      )
+                                    : ListView(
+                                        padding: EdgeInsets.only(
+                                          top: 5.h,
+                                          bottom: 20.h,
+                                        ),
+                                        children: [
+                                          ...List.generate(
+                                            _familyChits.length,
+                                            (index) => _buildFamilyChitCard(
+                                              index,
+                                              _familyChits[index],
+                                            ),
+                                          ),
+                                          SizedBox(height: 10.h),
+                                          Padding(
                                             padding: EdgeInsets.symmetric(
-                                              vertical: 12.h,
+                                              horizontal: 16.w,
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primary,
-                                              borderRadius:
-                                                  BorderRadius.circular(25.r),
-                                            ),
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              'Pay ₹ 25,000',
-                                              style: TextStyle(
-                                                color: AppColors.white,
-                                                fontSize: 16.sp,
-                                                fontWeight: FontWeight.bold,
+                                            child: _buildPayBottomBar(
+                                              _selectedFamilyChits
+                                                  .where((e) => e)
+                                                  .length,
+                                              _calculateTotalAmount(
+                                                _familyChits,
+                                                _selectedFamilyChits,
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : ListView(
-                                padding: EdgeInsets.zero,
-                                children: [
-                                  _buildFamilyChitCard(
-                                    0,
-                                    'Harish',
-                                    'Unpriced',
-                                    '₹10,00,000',
-                                    '01 Jan 2024',
-                                    '31 Aug 2025',
-                                  ),
-                                  _buildFamilyChitCard(
-                                    1,
-                                    'Fazil',
-                                    'Unpriced',
-                                    '₹10,00,000',
-                                    '01 Jan 2024',
-                                    '31 Aug 2025',
-                                  ),
-                                  _buildFamilyChitCard(
-                                    2,
-                                    'Kavin',
-                                    'Unpriced',
-                                    '₹10,00,000',
-                                    '01 Jan 2024',
-                                    '31 Aug 2025',
-                                  ),
-                                  SizedBox(height: 20.h),
-                                ],
-                              )),
+                                        ],
+                                      )),
+                        ),
                 ),
               ],
             ),
@@ -353,11 +474,97 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildIndividualChitCard(int index) {
+  Widget _buildPayBottomBar(int selectedCount, double totalAmount) {
+    return Container(
+      padding: EdgeInsets.only(top: 10.h, bottom: 20.h),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TrText(
+                'Pay Selected',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textDark,
+                ),
+              ),
+              Text(
+                ' ( $selectedCount )',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textDark,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 15.h),
+          GestureDetector(
+            onTap: selectedCount == 0
+                ? null
+                : () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PaymentMethodScreen(),
+                      ),
+                    );
+                  },
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(vertical: 12.h),
+              decoration: BoxDecoration(
+                color: selectedCount == 0
+                    ? AppColors.primary.withValues(alpha: 0.5)
+                    : AppColors.primary,
+                borderRadius: BorderRadius.circular(25.r),
+              ),
+              alignment: Alignment.center,
+              child: totalAmount > 0
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TrText(
+                          'Pay',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          ' ₹ ${_formatAmount(totalAmount)}',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    )
+                  : TrText(
+                      'Pay Now',
+                      style: TextStyle(
+                        color: AppColors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIndividualChitCard(int index, dynamic chit) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedIndividualChits[index] = !selectedIndividualChits[index];
+          _selectedIndividualChits[index] = !_selectedIndividualChits[index];
         });
       },
       child: Container(
@@ -365,14 +572,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(16.r),
           border: Border.all(
-            color: selectedIndividualChits[index]
+            color: _selectedIndividualChits[index]
                 ? AppColors.primary
                 : AppColors.cardBorder,
             width: 1.w,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -425,34 +632,44 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Chandru',
+                                (chit['chit_id'] != null && chit['chit_id'].toString().trim().isNotEmpty)
+                                    ? "${(chit['name']?.toString() ?? '').isNotEmpty ? chit['name'] : (chit['chit_no'] ?? '')} - ${chit['chit_id']}"
+                                    : (chit['name']?.toString() ?? ''),
                                 style: TextStyle(
-                                  fontSize: 17.sp,
+                                  fontSize: 14.sp,
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.textDark,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               SizedBox(height: 2.h),
-                              RichText(
-                                text: TextSpan(
-                                  text: 'Group Detail  ',
-                                  style: TextStyle(
-                                    color: AppColors.textGrey,
-                                    fontSize: 12.sp,
-                                    fontWeight: FontWeight.w500,
-                                    fontFamily: 'Inter',
+                              Row(
+                                children: [
+                                  TrText(
+                                    'Group Detail: ',
+                                    style: TextStyle(
+                                      color: AppColors.textGrey,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Inter',
+                                    ),
                                   ),
-                                  children: [
-                                    TextSpan(
-                                      text: '10-L',
+                                  Expanded(
+                                    child: Text(
+                                      chit['group_detail']?.toString() ??
+                                          chit['group_name']?.toString() ??
+                                          '',
                                       style: TextStyle(
                                         color: AppColors.primary,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13.sp,
                                       ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -472,8 +689,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               width: 1.2.w,
                             ),
                           ),
-                          child: Text(
-                            'Customer',
+                          child: TrText(
+                            chit['role']?.toString() ?? '-',
                             style: TextStyle(
                               color: AppColors.primary,
                               fontSize: 12.sp,
@@ -491,16 +708,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(6.r),
                             border: Border.all(
-                              color: selectedIndividualChits[index]
+                              color: _selectedIndividualChits[index]
                                   ? AppColors.primary
                                   : AppColors.checkboxInactive,
                               width: 1.6.w,
                             ),
-                            color: selectedIndividualChits[index]
+                            color: _selectedIndividualChits[index]
                                 ? AppColors.primary
                                 : AppColors.white,
                           ),
-                          child: selectedIndividualChits[index]
+                          child: _selectedIndividualChits[index]
                               ? Icon(
                                   Icons.check,
                                   size: 15.sp,
@@ -515,174 +732,171 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   // 3 Metrics Columns: Chit Value | Start - End Date | Running Balance
                   Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 10.w,
-                      vertical: 6.h,
+                      horizontal: 8.w,
+                      vertical: 5.h,
                     ),
-                    child: Row(
-                      children: [
-                        // Metric 1: Chit Value
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32.w,
-                                height: 32.w,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.cardSubContainer,
-                                  shape: BoxShape.circle,
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Metric 1: Chit Value
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 30.w,
+                                  height: 30.w,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.cardSubContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.account_balance_wallet_rounded,
+                                    color: AppColors.primary,
+                                    size: 15.sp,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.account_balance_wallet_rounded,
-                                  color: AppColors.primary,
-                                  size: 17.sp,
+                                SizedBox(height: 6.h),
+                                TrText(
+                                  'Chit Value',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textGrey,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 6.w),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Chit Value',
-                                      style: TextStyle(
-                                        color: AppColors.textGrey,
-                                        fontSize: 9.5.sp,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      '10,00,000',
-                                      style: TextStyle(
-                                        color: AppColors.textBody,
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                                SizedBox(height: 2.h),
+                                Text(
+                                  chit['chit_value_display']?.toString() ??
+                                      _formatAmount(chit['chit_value']),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textBody,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
 
-                        // Divider
-                        Container(
-                          height: 32.h,
-                          width: 1.w,
-                          color: AppColors.dividerLight,
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                        ),
-
-                        // Metric 2: Start - End Date
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32.w,
-                                height: 32.w,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.cardSubContainer,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.calendar_today_rounded,
-                                  color: AppColors.primary,
-                                  size: 15.sp,
-                                ),
-                              ),
-                              SizedBox(width: 6.w),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Start - End Date',
-                                      style: TextStyle(
-                                        color: AppColors.textGrey,
-                                        fontSize: 9.5.sp,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 1.h),
-                                    Text(
-                                      '10 Jan 26 -\n10 Dec 26',
-                                      style: TextStyle(
-                                        color: AppColors.textBody,
-                                        fontSize: 10.5.sp,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.15,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          // Divider
+                          Container(
+                            width: 1.w,
+                            color: AppColors.dividerLight,
+                            height: double.infinity,
                           ),
-                        ),
 
-                        // Divider
-                        Container(
-                          height: 32.h,
-                          width: 1.w,
-                          color: AppColors.dividerLight,
-                          margin: EdgeInsets.symmetric(horizontal: 4.w),
-                        ),
-
-                        // Metric 3: Running Balance
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32.w,
-                                height: 32.w,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.cardSubContainer,
-                                  shape: BoxShape.circle,
+                          // Metric 2: Start - End Date
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 30.w,
+                                  height: 30.w,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.cardSubContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.calendar_today_rounded,
+                                    color: AppColors.primary,
+                                    size: 15.sp,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.currency_rupee_rounded,
-                                  color: AppColors.primary,
-                                  size: 16.sp,
+                                SizedBox(height: 6.h),
+                                TrText(
+                                  'Start - End Date',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textGrey,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 6.w),
-                              Flexible(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Running Balance',
-                                      style: TextStyle(
-                                        color: AppColors.textGrey,
-                                        fontSize: 9.5.sp,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2.h),
-                                    Text(
-                                      '5,00,000',
-                                      style: TextStyle(
-                                        color: AppColors.textBody,
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                                SizedBox(height: 2.h),
+                                Text(
+                                  _formatChitDates(chit),
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textBody,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w600,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+
+                          // Divider
+                          Container(
+                            width: 1.w,
+                            color: AppColors.dividerLight,
+                            height: double.infinity,
+                          ),
+
+                          // Metric 3: Running Balance
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 30.w,
+                                  height: 30.w,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.cardSubContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.currency_rupee_rounded,
+                                    color: AppColors.primary,
+                                    size: 15.sp,
+                                  ),
+                                ),
+                                SizedBox(height: 6.h),
+                                TrText(
+                                  'Running Balance',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textGrey,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 2.h),
+                                Text(
+                                  chit['running_balance'] != null
+                                      ? _formatAmount(chit['running_balance'])
+                                      : '-',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textBody,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
-                  SizedBox(height: 6.h),
+                  SizedBox(height: 2.h),
 
                   // Bank Account & UPI ID Container
                   Container(
@@ -702,8 +916,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 30.w,
-                                height: 30.w,
+                                width: 28.w,
+                                height: 28.w,
                                 decoration: const BoxDecoration(
                                   color: AppColors.white,
                                   shape: BoxShape.circle,
@@ -719,7 +933,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    TrText(
                                       'A/C No:',
                                       style: TextStyle(
                                         color: AppColors.textGrey,
@@ -728,7 +942,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       ),
                                     ),
                                     Text(
-                                      '10108011866',
+                                      (chit['account_no'] != null &&
+                                              chit['account_no']
+                                                  .toString()
+                                                  .trim()
+                                                  .isNotEmpty)
+                                          ? chit['account_no'].toString()
+                                          : '-',
                                       style: TextStyle(
                                         color: AppColors.textBody,
                                         fontSize: 11.5.sp,
@@ -749,7 +969,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           height: 24.h,
                           width: 1.w,
                           color: AppColors.cardSubDivider,
-                          margin: EdgeInsets.symmetric(horizontal: 6.w),
+                          margin: EdgeInsets.symmetric(horizontal: 10.w),
                         ),
 
                         // Right: UPI ID
@@ -757,8 +977,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           child: Row(
                             children: [
                               Container(
-                                width: 30.w,
-                                height: 30.w,
+                                width: 28.w,
+                                height: 28.w,
                                 decoration: const BoxDecoration(
                                   color: AppColors.white,
                                   shape: BoxShape.circle,
@@ -766,8 +986,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 child: Center(
                                   child: Image.asset(
                                     'assets/upi.jpeg',
-                                    height: 20.h,
-                                    width: 20.w,
+                                    height: 18.h,
+                                    width: 18.w,
                                     fit: BoxFit.contain,
                                   ),
                                 ),
@@ -777,7 +997,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    TrText(
                                       'UPI ID:',
                                       style: TextStyle(
                                         color: AppColors.textGrey,
@@ -786,7 +1006,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       ),
                                     ),
                                     Text(
-                                      '10108011866@ubicaps',
+                                      (chit['upi_id'] != null &&
+                                              chit['upi_id']
+                                                  .toString()
+                                                  .trim()
+                                                  .isNotEmpty)
+                                          ? chit['upi_id'].toString()
+                                          : '-',
                                       style: TextStyle(
                                         color: AppColors.textBody,
                                         fontSize: 10.5.sp,
@@ -813,18 +1039,34 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildFamilyChitCard(
-    int index,
-    String name,
-    String priceStatus,
-    String chitValue,
-    String startDate,
-    String endDate,
-  ) {
+  Widget _buildFamilyChitCard(int index, dynamic chit) {
+    final String name = chit['name']?.toString() ?? '';
+    final String chitId = chit['chit_id']?.toString() ?? '';
+    final String displayName = (chitId.isNotEmpty && chitId != 'null')
+        ? (name.isNotEmpty ? '$name - $chitId' : chitId)
+        : name;
+    final String groupDetail =
+        chit['group_detail']?.toString() ??
+        chit['group_name']?.toString() ??
+        '';
+    final String status = chit['status']?.toString() ?? 'Active';
+    final String chitValue =
+        chit['chit_value_display']?.toString() ??
+        _formatAmount(chit['chit_value']);
+    final String priceStatus = chit['prize_status']?.toString() ?? '-';
+    final String startDate =
+        chit['start_date_display']?.toString() ??
+        chit['start_date']?.toString() ??
+        '-';
+    final String endDate =
+        chit['end_date_display']?.toString() ??
+        chit['end_date']?.toString() ??
+        '-';
+
     return GestureDetector(
       onTap: () {
         setState(() {
-          selectedFamilyChits[index] = !selectedFamilyChits[index];
+          _selectedFamilyChits[index] = !_selectedFamilyChits[index];
         });
       },
       child: Container(
@@ -833,7 +1075,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(14.r),
           border: Border.all(
-            color: selectedFamilyChits[index]
+            color: _selectedFamilyChits[index]
                 ? AppColors.primary
                 : const Color(0x44FEF3C7),
             width: 0.8.w,
@@ -860,7 +1102,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             children: [
               // Green Header Bar: Avatar, Member Name, Group Badge, Active Badge
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
                 color: AppColors.primary,
                 child: Row(
                   children: [
@@ -880,49 +1122,59 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         fit: BoxFit.contain,
                       ),
                     ),
-                    SizedBox(width: 10.w),
-
-                    // Name
-                    Text(
-                      name,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     SizedBox(width: 8.w),
 
-                    // Group badge "10 - L"
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 2.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color(0x44FFFFFF),
-                        borderRadius: BorderRadius.circular(5.r),
-                      ),
-                      child: Text(
-                        '10 - L',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    // Name & Group badge in Expanded
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              displayName,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: 6.w),
+
+                          // Group badge
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 6.w,
+                              vertical: 2.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0x44FFFFFF),
+                              borderRadius: BorderRadius.circular(5.r),
+                            ),
+                            child: Text(
+                              groupDetail,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10.5.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                    const Spacer(),
+                    SizedBox(width: 6.w),
 
                     // Active status badge
                     Container(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 10.w,
-                        vertical: 4.h,
+                        horizontal: 8.w,
+                        vertical: 3.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Color(0x55FFFFFF),
+                        color: const Color(0x55FFFFFF),
                         borderRadius: BorderRadius.circular(14.r),
                       ),
                       child: Row(
@@ -930,22 +1182,22 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         children: [
                           Icon(
                             Icons.circle,
-                            color: Color(0xFF00A859),
-                            size: 10.w,
+                            color: const Color(0xFF00A859),
+                            size: 8.w,
                           ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Active',
+                          SizedBox(width: 4.w),
+                          TrText(
+                            status,
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 11.5.sp,
+                              fontSize: 11.sp,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(width: 10.w),
+                    SizedBox(width: 8.w),
 
                     // Checkbox
                     Container(
@@ -957,11 +1209,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           color: AppColors.white,
                           width: 1.6.w,
                         ),
-                        color: selectedFamilyChits[index]
+                        color: _selectedFamilyChits[index]
                             ? AppColors.white
                             : Colors.transparent,
                       ),
-                      child: selectedFamilyChits[index]
+                      child: _selectedFamilyChits[index]
                           ? Icon(
                               Icons.check,
                               size: 15.sp,
@@ -986,20 +1238,21 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            TrText(
                               'CHIT VALUE',
                               style: TextStyle(
                                 color: Color(0xFF6B7280),
-                                fontSize: 11.sp,
+                                fontSize: 10.sp,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             SizedBox(height: 3.h),
                             Text(
-                              chitValue,
+                              '₹ $chitValue',
                               style: TextStyle(
                                 color: AppColors.textBody,
                                 fontSize: 16.sp,
+                                fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -1029,11 +1282,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 size: 13.sp,
                               ),
                               SizedBox(width: 4.w),
-                              Text(
+                              TrText(
                                 priceStatus,
                                 style: TextStyle(
                                   color: Color(0xFFE05A17),
-                                  fontSize: 11.5.sp,
+                                  fontSize: 11.sp,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -1088,7 +1341,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      TrText(
                                         'START',
                                         style: TextStyle(
                                           color: AppColors.textLightGrey,
@@ -1148,7 +1401,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      TrText(
                                         'END',
                                         style: TextStyle(
                                           color: AppColors.textLightGrey,
@@ -1187,84 +1440,128 @@ class _PaymentScreenState extends State<PaymentScreen> {
   }
 
   Widget _buildPaymentHistoryList() {
-    return ListView(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
-      children: [
-        _buildHistoryCard(
-          chitId: 'Chit / 1123',
-          groupName: 'Group Name / L-10',
-          date: '24 Aug 2026, 11:45 AM',
-          status: 'Pending',
-          amount: '₹4,12,500',
-          isPending: true,
-        ),
-        SizedBox(height: 10.h),
-        _buildHistoryCard(
-          chitId: 'Chit / 1123',
-          groupName: 'Group Name / L-10',
-          date: '24 Jul 2026, 10:45 AM',
-          status: 'Pending',
-          amount: '₹4,12,500',
-          isPending: true,
-        ),
-        SizedBox(height: 15.h),
-        Center(
-          child: Row(
-            children: [
-              Expanded(child: Divider(color: Colors.grey.shade300)),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
-                child: Text(
-                  'July 2026',
-                  style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+    if (_isHistoryLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _fetchPaymentHistory,
+      child: _historyPayments.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(height: 120.h),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.receipt_long_outlined,
+                        size: 50.sp,
+                        color: Colors.grey.shade400,
+                      ),
+                      SizedBox(height: 10.h),
+                      TrText(
+                        'No payment history found',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(child: Divider(color: Colors.grey.shade300)),
-            ],
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+              itemCount: _historyPayments.length,
+              itemBuilder: (context, index) {
+                final payment = _historyPayments[index];
+                return _buildHistoryListItem(index, payment);
+              },
+            ),
+    );
+  }
+
+  Widget _buildHistoryListItem(int index, dynamic payment) {
+    final String currentMonth = payment['month_label']?.toString() ?? '';
+    final bool showMonthDivider = currentMonth.isNotEmpty &&
+        (index == 0 ||
+            _historyPayments[index - 1]['month_label']?.toString() !=
+                currentMonth);
+
+    final chitIdVal = payment['chit_id']?.toString() ??
+        payment['chit_no']?.toString() ??
+        '';
+    final String chitId = 'Chit / $chitIdVal';
+
+    final groupName = payment['group_name']?.toString() ?? '';
+    final groupDetail = payment['group_detail']?.toString() ?? '';
+    String groupDisplay = 'Group Name / ';
+    if (groupName.isNotEmpty && groupDetail.isNotEmpty) {
+      groupDisplay += '$groupName / $groupDetail';
+    } else if (groupName.isNotEmpty) {
+      groupDisplay += groupName;
+    } else if (groupDetail.isNotEmpty) {
+      groupDisplay += groupDetail;
+    } else {
+      groupDisplay += '-';
+    }
+
+    final String dateDisplay = (payment['datetime_display'] != null &&
+            payment['datetime_display'].toString().trim().isNotEmpty)
+        ? payment['datetime_display'].toString()
+        : '${payment['date'] ?? ''} ${payment['time'] ?? ''}'.trim();
+
+    final String status = payment['status']?.toString() ?? 'Approved';
+    final bool isPending = status.toLowerCase() == 'pending';
+    final String amountDisplay =
+        '₹${payment['amount_display'] ?? payment['amount'] ?? '0'}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showMonthDivider) ...[
+          if (index > 0) SizedBox(height: 15.h),
+          Center(
+            child: Row(
+              children: [
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  child: TrText(
+                    currentMonth,
+                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+                  ),
+                ),
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: 15.h),
+          SizedBox(height: 15.h),
+        ],
         _buildHistoryCard(
-          chitId: 'Chit / 1123',
-          groupName: 'Group Name / L-10',
-          date: '24 Jun 2026, 9:45 AM',
-          status: 'Approved',
-          amount: '₹4,12,500',
-          isPending: false,
+          payment: payment,
+          chitId: chitId,
+          groupName: groupDisplay,
+          date: dateDisplay,
+          status: status,
+          amount: amountDisplay,
+          isPending: isPending,
         ),
         SizedBox(height: 10.h),
-        _buildHistoryCard(
-          chitId: 'Chit / 1123',
-          groupName: 'Group Name / L-10',
-          date: '24 May 2026, 10:45 AM',
-          status: 'Approved',
-          amount: '₹4,12,500',
-          isPending: false,
-        ),
-        SizedBox(height: 10.h),
-        _buildHistoryCard(
-          chitId: 'Chit / 1123',
-          groupName: 'Group Name / L-10',
-          date: '24 Aug 2026, 11:45 AM',
-          status: 'Approved',
-          amount: '₹4,12,500',
-          isPending: false,
-        ),
-        SizedBox(height: 10.h),
-        _buildHistoryCard(
-          chitId: 'Chit / 1123',
-          groupName: 'Group Name / L-10',
-          date: '24 Aug 2026, 11:45 AM',
-          status: 'Approved',
-          amount: '₹4,12,500',
-          isPending: false,
-        ),
-        SizedBox(height: 20.h),
       ],
     );
   }
 
   Widget _buildHistoryCard({
+    required dynamic payment,
     required String chitId,
     required String groupName,
     required String date,
@@ -1285,7 +1582,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ApprovalHistoryScreen(),
+              builder: (context) => ApprovalHistoryScreen(
+                paymentData: payment is Map<String, dynamic>
+                    ? payment
+                    : Map<String, dynamic>.from(payment as Map),
+              ),
             ),
           );
         }
@@ -1324,20 +1625,27 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     groupName,
                     style: TextStyle(fontSize: 11.sp, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 2.h),
                   Text(
                     date,
                     style: TextStyle(fontSize: 11.sp, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
+            SizedBox(width: 8.w),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -1373,7 +1681,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             size: 12.sp,
                           ),
                         ),
-                      Text(
+                      TrText(
                         status,
                         style: TextStyle(
                           color: isPending
@@ -1436,7 +1744,7 @@ class CardTopRightWavePainter extends CustomPainter {
       ..cubicTo(w * 0.80, h * 0.45, w * 0.65, h * 0.10, w * 0.40, 0)
       ..close();
 
-    final paint2 = Paint()..color = AppColors.waveAccent.withOpacity(0.65);
+    final paint2 = Paint()..color = AppColors.waveAccent.withValues(alpha: 0.65);
 
     canvas.drawPath(path2, paint2);
   }

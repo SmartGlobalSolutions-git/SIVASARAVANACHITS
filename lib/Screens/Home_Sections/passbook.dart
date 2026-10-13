@@ -4,6 +4,7 @@ import 'package:siva_saravana/Screens/statements/passbook_statement.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'package:siva_saravana/Screens/Home_Sections/drawers_screen.dart';
 import 'package:siva_saravana/services/chit_scheme_api.dart';
+import '../../services/translation_service.dart';
 
 class PassbookScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -51,7 +52,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
     final chitId = _selectedChitId;
     if (chitId == null || chitId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a Chit ID')),
+        const SnackBar(content: TrText('Please select a Chit ID')),
       );
       return;
     }
@@ -79,7 +80,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response?['message'] ?? 'There is no chit for this ID')),
+        SnackBar(content: TrText(response?['message'] ?? 'There is no chit for this ID')),
       );
     }
   }
@@ -120,7 +121,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
         ),
         titleSpacing: 0,
         surfaceTintColor: Colors.transparent,
-        title: Text(
+        title: TrText(
           'Passbook',
           style: TextStyle(color: Colors.black, fontSize: 16.sp, fontWeight: FontWeight.w600),
         ),
@@ -134,7 +135,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
+                    TrText(
                       'Chit ID',
                       style: TextStyle(fontSize: 14.sp, color: Colors.black87),
                     ),
@@ -157,7 +158,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
                                   dropdownColor: Colors.white,
                                   value: _selectedChitId,
                                   isExpanded: true,
-                                  hint: Text('Select Chit', style: TextStyle(fontSize: 13.sp, color: Colors.grey)),
+                                  hint: TrText('Select Chit', style: TextStyle(fontSize: 13.sp, color: Colors.grey)),
                                   items: _chitList.map((chit) {
                                     final id = chit['chit_id'].toString();
                                     final name = chit['grp_name']?.toString() ?? '';
@@ -197,7 +198,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
                               width: 20.h, 
                               child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                             )
-                          : Text(
+                          : TrText(
                               'Submit',
                               style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600),
                             ),

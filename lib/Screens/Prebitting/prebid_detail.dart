@@ -8,6 +8,7 @@ import 'package:siva_saravana/constants/app_colors.dart';
 import '../../services/prebid_api.dart';
 import '../../services/profile_view_api.dart';
 import '../Home_Sections/drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kAuctionCardBg = Color(0xFFFFFCF0);
@@ -142,26 +143,12 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
     return isNegative ? '-$result' : result;
   }
 
-  bool get _isAuctionToday {
-    final now = DateTime.now();
-    return now.year == widget.auctionDateTime.year &&
-        now.month == widget.auctionDateTime.month &&
-        now.day == widget.auctionDateTime.day;
-  }
-
   String _formatDate(DateTime d) {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return "${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}";
-  }
-
-  String _formatTime(DateTime d) {
-    final hour = d.hour % 12 == 0 ? 12 : d.hour % 12;
-    final minute = d.minute.toString().padLeft(2, '0');
-    final period = d.hour >= 12 ? 'PM' : 'AM';
-    return "$hour:$minute $period";
   }
 
   @override
@@ -199,7 +186,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                   SizedBox(height: 16.h),
                   _buildRunningBalanceCard(),
                   SizedBox(height: 24.h),
-                  Text(
+                  TrText(
                     'Pre-Bid Details',
                     style: TextStyle(
                       fontFamily: 'Inter',
@@ -209,7 +196,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                     ),
                   ),
                   SizedBox(height: 12.h),
-                  Text(
+                  TrText(
                     'Enter Pre-Bid Amount',
                     style: TextStyle(
                       fontFamily: 'Inter',
@@ -221,14 +208,46 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                   SizedBox(height: 8.h),
                   _buildAmountInput(),
                   SizedBox(height: 6.h),
-                  Text(
-                    'Enter amount between ₹${_formatAmount(widget.minBid)} and ₹${_formatAmount(widget.maxBid)}',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12.sp,
-                      color: kInputLabelBrown,
-                    ),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      TrText(
+                        'Enter amount between',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12.sp,
+                          color: kInputLabelBrown,
+                        ),
+                      ),
+                      Text(
+                        ' ₹${_formatAmount(widget.minBid)} ',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.sp,
+                          color: kInputLabelBrown,
+                        ),
+                      ),
+                      TrText(
+                        'and',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w400,
+                          fontSize: 12.sp,
+                          color: kInputLabelBrown,
+                        ),
+                      ),
+                      Text(
+                        ' ₹${_formatAmount(widget.maxBid)}',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.sp,
+                          color: kInputLabelBrown,
+                        ),
+                      ),
+                    ],
                   ),
                   SizedBox(height: 24.h),
                   _buildTermsCard(context),
@@ -257,7 +276,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
           }
         },
       ),
-      title: Text(
+      title: TrText(
         'Prebidding',
         style: TextStyle(
           fontFamily: 'Inter',
@@ -292,7 +311,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(
                       color: AppColors.primaryColor,
@@ -360,7 +379,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                     height: 25.w,
                   ),
                   SizedBox(width: 10.w),
-                  Text(
+                  TrText(
                     'Auction Details',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -374,70 +393,87 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Auction Date',
-                        style: TextStyle(
-                          color: Color(0xFF505255),
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TrText(
+                          'Auction Date',
+                          style: TextStyle(
+                            color: Color(0xFF505255),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        auctionDate,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
+                        SizedBox(height: 4.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            auctionDate,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Container(width: 1, height: 30.h, color: Color(0xFFCDD2DA)),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Auction No.',
-                        style: TextStyle(
-                          color: Color(0xFF505255),
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        TrText(
+                          'Auction No.',
+                          style: TextStyle(
+                            color: Color(0xFF505255),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        _apiData?['chit_id']?.toString() ?? '-',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
+                        SizedBox(height: 4.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _apiData?['chit_id']?.toString() ?? '-',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Container(width: 1, height: 30.h, color: Color(0xFFCDD2DA)),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Auction Time',
-                        style: TextStyle(
-                          color: Color(0xFF505255),
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        TrText(
+                          'Auction Time',
+                          style: TextStyle(
+                            color: Color(0xFF505255),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        auctionTime,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
+                        SizedBox(height: 4.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            auctionTime,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -474,23 +510,32 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
               height: 24.w,
             ),
           ),
-          SizedBox(width: 12.w),
-          Text(
-            'RUNNING BALANCE ',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w500,
-              fontSize: 14.sp,
-              color: Colors.white,
+          SizedBox(width: 10.w),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: TrText(
+                'RUNNING BALANCE ',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14.sp,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
-          Text(
-            '₹ ${_formatAmount(rb)}',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.bold,
-              fontSize: 18.sp,
-              color: Colors.white,
+          SizedBox(width: 4.w),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '₹ ${_formatAmount(rb)}',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.bold,
+                fontSize: 18.sp,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -623,7 +668,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('I have read and agree to the', 
+                  TrText('I have read and agree to the', 
                   style: TextStyle(
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -633,7 +678,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
                       ),
                   ),
                   SizedBox(height: 4.h),
-                  Text('Pre-Bidding Terms & Conditions', 
+                  TrText('Pre-Bidding Terms & Conditions', 
                   style: TextStyle(
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w400,
@@ -664,7 +709,7 @@ class _PrebiddingDetailScreenState extends State<PrebiddingDetailScreen> {
     if (_amountController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter bid amount', style: TextStyle(color: Colors.white)),
+          content: TrText('Please enter bid amount', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.black,
           behavior: SnackBarBehavior.fixed,
         ),
@@ -716,15 +761,18 @@ class _TimerBox extends StatelessWidget {
           ),
         ),
         SizedBox(height: 6.h),
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Manrope',
-            fontWeight: FontWeight.w700,
-            fontSize: 9.08.sp,
-            height: 13.62 / 9.08,
-            letterSpacing: 0.45,
-            color: kAmountGreen,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: TrText(
+            label,
+            style: TextStyle(
+              fontFamily: 'Manrope',
+              fontWeight: FontWeight.w700,
+              fontSize: 9.08.sp,
+              height: 13.62 / 9.08,
+              letterSpacing: 0.45,
+              color: kAmountGreen,
+            ),
           ),
         ),
       ],

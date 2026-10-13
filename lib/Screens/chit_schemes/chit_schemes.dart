@@ -6,6 +6,7 @@ import 'package:siva_saravana/Screens/chit_schemes/subscription_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/drawers_screen.dart';
 import '../../services/chit_scheme_api.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
+import '../../services/translation_service.dart';
 
 class ChitSchemesScreen extends StatefulWidget {
   final int initialTab;
@@ -107,7 +108,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
             },
           ),
           titleSpacing: 0,
-          title: Text(
+          title: TrText(
             'Chits Schemes',
             style: TextStyle(
               fontSize: 16.sp,
@@ -144,7 +145,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                       height: 14.w,
                     ),
                     SizedBox(width: 4.w),
-                    Text(
+                    TrText(
                       'Need Help ?',
                       style: TextStyle(
                         color: const Color(0xFF0C8A4B),
@@ -187,7 +188,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                     child: isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : currentList.isEmpty
-                        ? const Center(child: Text('No data found.'))
+                        ? const Center(child: TrText('No data found.'))
                         : ListView.separated(
                             padding: _selectedTabIndex == 1
                                 ? EdgeInsets.symmetric(vertical: 16.h)
@@ -242,7 +243,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                     ),
                   ),
                 ),
-                child: Text(
+                child: TrText(
                   'Chits Schemes',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -275,7 +276,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                     ),
                   ),
                 ),
-                child: Text(
+                child: TrText(
                   'Available Chits',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -306,7 +307,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
         children: [
           Expanded(
             flex: 3,
-            child: Text(
+            child: TrText(
               'Chit Value',
               style: TextStyle(
                 fontSize: 14.sp,
@@ -318,7 +319,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(
+            child: TrText(
               'Members',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -331,7 +332,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(
+            child: TrText(
               'Months',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -344,7 +345,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
           ),
           Expanded(
             flex: 1,
-            child: Text(
+            child: TrText(
               'View',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -471,14 +472,27 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
-            child: Text(
-              'Chit Value - ₹ ${_formatAmount(chitValue)}',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF018F46),
-              ),
+            child: Row(
+              children: [
+                TrText(
+                  'Chit Value',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF018F46),
+                  ),
+                ),
+                Text(
+                  ' - ₹ ${_formatAmount(chitValue)}',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF018F46),
+                  ),
+                ),
+              ],
             ),
           ),
 
@@ -502,7 +516,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           width: 18.w,
                         ),
                         SizedBox(height: 4.h),
-                        Text(
+                        TrText(
                           'Total Months',
                           style: TextStyle(
                             fontSize: 10.sp,
@@ -514,16 +528,29 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 2.h),
-                        Text(
-                          '$totalMonthsStr Months',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$totalMonthsStr ',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter',
+                                color: Colors.black,
+                              ),
+                            ),
+                            TrText(
+                              'Months',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter',
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -544,7 +571,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           width: 18.w,
                         ),
                         SizedBox(height: 4.h),
-                        Text(
+                        TrText(
                           'Duration',
                           style: TextStyle(
                             fontSize: 10.sp,
@@ -556,7 +583,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 2.h),
-                        Text(
+                        TrText(
                           durationStr,
                           style: TextStyle(
                             fontSize: 10.sp,
@@ -586,7 +613,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           width: 18.w,
                         ),
                         SizedBox(height: 4.h),
-                        Text(
+                        TrText(
                           'Available Slots',
                           style: TextStyle(
                             fontSize: 10.sp,
@@ -598,16 +625,29 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 2.h),
-                        Text(
-                          '$availableSlotsStr Slots',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: 'Inter',
-                            color: Colors.black,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '$availableSlotsStr ',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter',
+                                color: Colors.black,
+                              ),
+                            ),
+                            TrText(
+                              'Slots',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter',
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -620,7 +660,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
           SizedBox(height: 8.h),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Text(
+            child: TrText(
               'Ticket Details',
               style: TextStyle(
                 fontSize: 12.sp,
@@ -665,7 +705,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TrText(
                                 '½ Ticket',
                                 style: TextStyle(
                                   fontSize: 10.sp,
@@ -693,14 +733,28 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             color: const Color(0xFFD6E8FC),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
-                          child: Text(
-                            '$halfTicketSlotsStr Slots',
-                            style: TextStyle(
-                              fontSize: 9.sp,
-                              color: const Color(0xFF1B64B7),
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Inter',
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$halfTicketSlotsStr ',
+                                style: TextStyle(
+                                  fontSize: 9.sp,
+                                  color: const Color(0xFF1B64B7),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                              TrText(
+                                'Slots',
+                                style: TextStyle(
+                                  fontSize: 9.sp,
+                                  color: const Color(0xFF1B64B7),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -737,7 +791,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TrText(
                                 '1 Ticket',
                                 style: TextStyle(
                                   fontSize: 10.sp,
@@ -765,14 +819,28 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
                             color: const Color(0xFFFBE4C6),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
-                          child: Text(
-                            '$fullTicketSlotsStr Slots',
-                            style: TextStyle(
-                              fontSize: 9.sp,
-                              color: const Color(0xFFD98E04),
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'Inter',
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$fullTicketSlotsStr ',
+                                style: TextStyle(
+                                  fontSize: 9.sp,
+                                  color: const Color(0xFFD98E04),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                              TrText(
+                                'Slots',
+                                style: TextStyle(
+                                  fontSize: 9.sp,
+                                  color: const Color(0xFFD98E04),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Inter',
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -811,7 +879,7 @@ class _ChitSchemesScreenState extends State<ChitSchemesScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  TrText(
                     'View Details',
                     style: TextStyle(
                       color: Colors.white,

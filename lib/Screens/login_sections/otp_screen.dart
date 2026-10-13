@@ -119,6 +119,9 @@ class _OtpScreenState extends State<OtpScreen> {
     if (response != null && response['error'] == false) {
       if (!mounted) return;
       
+      // Clear any previous session details
+      await SharedPrefsHelper.clearPreferences();
+
       final cusId = response['cus_id'];
       final token = response['token'];
       if (cusId != null) {

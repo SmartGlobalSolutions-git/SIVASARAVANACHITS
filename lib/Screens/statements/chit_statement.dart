@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'package:siva_saravana/utils/pdf_generator.dart';
 import '../Home_Sections/drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 class ChitStatementScreen extends StatefulWidget {
   final dynamic chitId;
@@ -73,29 +74,39 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
   Future<void> _onDownload() async {
     if (_transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No transactions to download')),
+        const SnackBar(content: TrText('No transactions to download')),
       );
       return;
     }
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Generating PDF...'),
+        content: TrText('Generating PDF...'),
         duration: Duration(seconds: 1),
         backgroundColor: Color(0xFF007A55),
       ),
     );
     
-    await PdfGenerator.generateChitStatement(_transactions, widget.chitId);
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Saved to Downloads folder!'),
-          duration: Duration(seconds: 2),
-          backgroundColor: Color(0xFF007A55),
-        ),
-      );
+    try {
+      final savedPath = await PdfGenerator.generateChitStatement(_transactions, widget.chitId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloaded successfully to $savedPath'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: const Color(0xFF007A55),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -134,7 +145,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
               }
             },
           ),
-        title: Text(
+        title: TrText(
           'Chit Statement',
           style: TextStyle(
             color: Colors.black,
@@ -170,7 +181,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(
                       color: AppColors.primaryColor,
@@ -327,7 +338,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
               : BorderSide(color: const Color(0xFF0B6347), width: 1.w),
         ),
       ),
-      child: Text(
+      child: TrText(
         title,
         textAlign: TextAlign.center,
         style: TextStyle(
@@ -409,7 +420,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
             color: Colors.white,
             size: 20.sp,
           ),
-          label: Text(
+          label: TrText(
             'Download Statement',
             style: TextStyle(
               color: Colors.white,

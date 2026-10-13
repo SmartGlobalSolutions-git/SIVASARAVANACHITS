@@ -393,4 +393,70 @@ class ChitSchemeApiService {
       return null;
     }
   }
+
+  // 5027 - Payment Chits Overview
+  static Future<Map<String, dynamic>?> fetchPaymentChits() async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      final cusId = await SharedPrefsHelper.getCusId();
+      requestBody['type'] = '5027';
+      if (cusId != null) requestBody['cus_id'] = cusId.toString();
+
+      debugPrint('--- PAYMENT CHITS API REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      print('--- PAYMENT CHITS API RESPONSE ---');
+      print('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        } else if (decoded is Map) {
+          return Map<String, dynamic>.from(decoded);
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Payment Chits API Error: $e');
+      return null;
+    }
+  }
+
+  // 6024 - Home Banner Images
+  static Future<List<dynamic>?> fetchHomeBanners() async {
+    try {
+      final requestBody = await _getBaseRequestData();
+      requestBody['type'] = '6024';
+
+      debugPrint('--- HOME BANNERS API (6024) REQUEST ---');
+      debugPrint('BODY: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(ApiConstants.baseUrl),
+        body: requestBody,
+      );
+
+      debugPrint('--- HOME BANNERS API (6024) RESPONSE ---');
+      debugPrint('RESPONSE: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['data'] is List) {
+          return decoded['data'];
+        } else if (decoded is List) {
+          return decoded;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Home Banners API Error: $e');
+      return null;
+    }
+  }
 }

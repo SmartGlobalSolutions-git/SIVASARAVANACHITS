@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import '../../services/terms_and_conditions_api.dart';
+import '../../services/translation_service.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -99,7 +100,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             _termsData?['title'] ?? 'Terms and Conditions',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -120,7 +121,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _termsData == null
-                ? const Center(child: Text('Failed to load terms and conditions'))
+                ? const Center(child: TrText('Failed to load terms and conditions'))
                 : ScrollConfiguration(
                     behavior: ScrollConfiguration.of(context).copyWith(
                       overscroll: false,
@@ -134,7 +135,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (_termsData?['published'] != null)
-                              Text(
+                              TrText(
                                 _termsData!['published'].toString(),
                                 style: bodyStyle,
                               ),
@@ -142,7 +143,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                               SizedBox(height: 14.h),
                             
                             if (_termsData?['intro'] != null)
-                              Text(
+                              TrText(
                                 _termsData!['intro'].toString(),
                                 style: bodyStyle,
                               ),
@@ -184,13 +185,13 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (title.isNotEmpty)
-            Text(
+            TrText(
               title,
               style: titleStyle,
             ),
           if (title.isNotEmpty) SizedBox(height: 2.h),
           if (content.isNotEmpty)
-            Text(
+            TrText(
               content,
               style: bodyStyle,
             ),

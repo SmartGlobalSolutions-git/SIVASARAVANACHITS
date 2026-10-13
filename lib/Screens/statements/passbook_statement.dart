@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'package:siva_saravana/utils/pdf_generator.dart';
 import '../Home_Sections/drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 class PassbookStatementScreen extends StatefulWidget {
   final dynamic chitId;
@@ -71,40 +72,62 @@ class _PassbookStatementScreenState extends State<PassbookStatementScreen> {
   Future<void> _onDownload() async {
     if (_transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No transactions to download')),
+        const SnackBar(content: TrText('No transactions to download')),
       );
       return;
     }
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Generating PDF...'),
+        content: TrText('Generating PDF...'),
         duration: Duration(seconds: 1),
         backgroundColor: AppColors.primary,
       ),
     );
     
-    await PdfGenerator.generatePassbookStatement(_transactions, widget.chitId);
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Saved to Downloads folder!'),
-          duration: Duration(seconds: 2),
-          backgroundColor: AppColors.primary,
-        ),
-      );
+    try {
+      final savedPath = await PdfGenerator.generatePassbookStatement(_transactions, widget.chitId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloaded successfully to $savedPath'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
-  void _onShare() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sharing Passbook Statement...'),
-        duration: Duration(seconds: 2),
-        backgroundColor: AppColors.primary,
-      ),
-    );
+  Future<void> _onShare() async {
+    if (_transactions.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: TrText('No transactions to share')),
+      );
+      return;
+    }
+
+    try {
+      await PdfGenerator.sharePassbookStatement(_transactions, widget.chitId);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to share PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -142,7 +165,7 @@ class _PassbookStatementScreenState extends State<PassbookStatementScreen> {
               }
             },
           ),
-        title: Text(
+        title: TrText(
           'Passbook',
           style: TextStyle(
             color: AppColors.textDark,
@@ -275,7 +298,7 @@ class _PassbookStatementScreenState extends State<PassbookStatementScreen> {
               : BorderSide(color: const Color(0xFF0B6347), width: 1.w),
         ),
       ),
-      child: Text(
+      child: TrText(
         title,
         textAlign: TextAlign.center,
         style: TextStyle(
@@ -356,7 +379,7 @@ class _PassbookStatementScreenState extends State<PassbookStatementScreen> {
                   color: Colors.white,
                   size: 20.sp,
                 ),
-                label: Text(
+                label: TrText(
                   'Download',
                   style: TextStyle(
                     color: Colors.white,
@@ -385,7 +408,7 @@ class _PassbookStatementScreenState extends State<PassbookStatementScreen> {
                   color: const Color(0xFF007A55),
                   size: 20.sp,
                 ),
-                label: Text(
+                label: TrText(
                   'Share',
                   style: TextStyle(
                     color: const Color(0xFF007A55),

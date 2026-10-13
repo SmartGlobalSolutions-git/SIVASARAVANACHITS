@@ -4,6 +4,7 @@ import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'chit_statement.dart';
 import '../Home_Sections/drawers_screen.dart';
 import '../../services/chit_scheme_api.dart';
+import '../../services/translation_service.dart';
 
 class StatementScreen extends StatefulWidget {
   final VoidCallback? onBackTap;
@@ -50,7 +51,7 @@ class _StatementScreenState extends State<StatementScreen> {
     final chitId = _selectedChitId;
     if (chitId == null || chitId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a Chit ID')),
+        const SnackBar(content: TrText('Please select a Chit ID')),
       );
       return;
     }
@@ -76,7 +77,7 @@ class _StatementScreenState extends State<StatementScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response?['message'] ?? 'There is no chit')),
+        SnackBar(content: TrText(response?['message'] ?? 'There is no chit')),
       );
     }
   }
@@ -116,7 +117,7 @@ class _StatementScreenState extends State<StatementScreen> {
             },
           ),
           titleSpacing: 0,
-        title: Text(
+        title: TrText(
           'Statement',
           style: TextStyle(color: Colors.black, fontSize: 16.sp, fontWeight: FontWeight.w600, fontFamily: 'Inter'),
         ),
@@ -130,7 +131,7 @@ class _StatementScreenState extends State<StatementScreen> {
               children: [
                 Row(
                   children: [
-                    Text(
+                    TrText(
                       'Chit ID',
                       style: TextStyle(fontSize: 14.sp, color: Colors.black87),
                     ),
@@ -153,7 +154,7 @@ class _StatementScreenState extends State<StatementScreen> {
                                   dropdownColor: Colors.white,
                                   value: _selectedChitId,
                                   isExpanded: true,
-                                  hint: Text('Select Chit', style: TextStyle(fontSize: 13.sp, color: Colors.grey)),
+                                  hint: TrText('Select Chit', style: TextStyle(fontSize: 13.sp, color: Colors.grey)),
                                   items: _chitList.map((chit) {
                                     final id = chit['chit_id'].toString();
                                     final name = chit['grp_name']?.toString() ?? '';
@@ -193,7 +194,7 @@ class _StatementScreenState extends State<StatementScreen> {
                               width: 20.h, 
                               child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                             )
-                          : Text(
+                          : TrText(
                               'Submit',
                               style: TextStyle(color: Colors.white, fontSize: 14.sp, fontWeight: FontWeight.w600),
                             ),

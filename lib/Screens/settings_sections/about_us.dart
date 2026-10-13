@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
-
 import '../../services/about_us_api.dart';
+import '../../services/translation_service.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -109,7 +109,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             'About Us',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -139,12 +139,12 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
               child: _isLoading 
                   ? Center(child: CircularProgressIndicator())
                   : _errorMessage != null 
-                      ? Center(child: Text(_errorMessage!, style: TextStyle(color: Colors.red)))
+                      ? Center(child: TrText(_errorMessage!, style: TextStyle(color: Colors.red)))
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // 1. Green Intro Paragraph
-                            Text(
+                            TrText(
                               _aboutData?['intro']?.toString() ?? '',
                               style: introStyle,
                             ),
@@ -208,12 +208,12 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          TrText(
             title,
             style: headingStyle,
           ),
           SizedBox(height: 5.h),
-          Text(
+          TrText(
             content,
             style: bodyStyle,
           ),

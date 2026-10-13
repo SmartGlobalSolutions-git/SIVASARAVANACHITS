@@ -11,12 +11,12 @@ import 'package:siva_saravana/Screens/Home_Sections/passbook.dart';
 import 'package:siva_saravana/Screens/statements/statement.dart';
 import 'package:siva_saravana/Screens/Home_Sections/family_chit.dart';
 import 'package:siva_saravana/services/profile_view_api.dart';
-
 import 'package:siva_saravana/services/shared_prefs_helper.dart';
+import '../../services/translation_service.dart';
 
 class DrawersScreen extends StatefulWidget {
-  final bool isFirstTimeUser;
-  const DrawersScreen({super.key, this.isFirstTimeUser = false});
+  final bool? isFirstTimeUser;
+  const DrawersScreen({super.key, this.isFirstTimeUser});
 
   @override
   State<DrawersScreen> createState() => _DrawersScreenState();
@@ -24,11 +24,23 @@ class DrawersScreen extends StatefulWidget {
 
 class _DrawersScreenState extends State<DrawersScreen> {
   String _userName = '';
+  late bool _isFirstTimeUser;
 
   @override
   void initState() {
     super.initState();
+    _isFirstTimeUser = widget.isFirstTimeUser ?? SharedPrefsHelper.cachedIsNewUser ?? false;
+    _checkFirstTimeUser();
     _fetchUserName();
+  }
+
+  Future<void> _checkFirstTimeUser() async {
+    final isNew = widget.isFirstTimeUser ?? await SharedPrefsHelper.getIsNewUser();
+    if (mounted && _isFirstTimeUser != isNew) {
+      setState(() {
+        _isFirstTimeUser = isNew;
+      });
+    }
   }
 
   Future<void> _fetchUserName() async {
@@ -39,18 +51,17 @@ class _DrawersScreenState extends State<DrawersScreen> {
           _userName = savedName;
         });
       }
-    } else {
-      final response = await ProfileViewApiService.fetchProfile();
-      if (mounted) {
-        setState(() {
-          if (response != null && response['error'] == false) {
-            _userName = response['profile']?['name']?.toString() ?? 'User';
-            SharedPrefsHelper.saveUserName(_userName);
-          } else {
-            _userName = 'User';
-          }
-        });
-      }
+    }
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted) {
+      setState(() {
+        if (response != null && response['error'] == false) {
+          _userName = response['profile']?['name']?.toString() ?? 'User';
+          SharedPrefsHelper.saveUserName(_userName);
+        } else if (_userName.isEmpty) {
+          _userName = 'User';
+        }
+      });
     }
   }
 
@@ -66,7 +77,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
           ),
           child: Image.asset(imagePath, height: 20.h, width: 20.w),
         ),
-        title: Text(title, style: TextStyle(fontSize: 14.sp)),
+        title: TrText(title, style: TextStyle(fontSize: 14.sp)),
         trailing: Icon(Icons.chevron_right, color: Colors.black54, size: 20.w),
         onTap: () {
           Navigator.pop(context);
@@ -121,24 +132,28 @@ class _DrawersScreenState extends State<DrawersScreen> {
                         ),
                       ),
                       SizedBox(width: 12.w),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hello',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12.sp,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TrText(
+                              'Hello',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12.sp,
+                              ),
                             ),
-                          ),
-                          Text(
-                            _userName.isEmpty ? 'Loading...' : _userName,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16.sp,
+                            Text(
+                              _userName.isEmpty ? 'Loading...' : _userName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16.sp,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -155,7 +170,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
                         child: Column(
                           children: [
                             SizedBox(height: 10.h),
-                            if (!widget.isFirstTimeUser)
+                            if (!_isFirstTimeUser)
                             _buildDrawerItem('assets/drawer/profile.png', 'Profile',
                             onTap: () {
                                 Navigator.push(
@@ -164,7 +179,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
                                 );
                               }
                             ),
-                            if (!widget.isFirstTimeUser)
+                            if (!_isFirstTimeUser)
                               _buildDrawerItem(
                                 'assets/drawer/payment.png',
                                 'Payment',
@@ -185,7 +200,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
                                 );
                               },
                             ),
-                            if (!widget.isFirstTimeUser)
+                            if (!_isFirstTimeUser)
                               _buildDrawerItem(
                                 'assets/drawer/passbook.png',
                                 'Passbook',
@@ -206,7 +221,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
                                 );
                               },
                             ),
-                            if (!widget.isFirstTimeUser) ...[
+                            if (!_isFirstTimeUser) ...[
                               _buildDrawerItem(
                                 'assets/drawer/prebiding.png',
                                 'Prebiding',
@@ -277,7 +292,7 @@ class _DrawersScreenState extends State<DrawersScreen> {
                       ),
                       SizedBox(height: 32.h),
                       Center(
-                        child: Text(
+                        child: TrText(
                           'App V1.0125',
                           style: TextStyle(color: Colors.grey, fontSize: 12.sp),
                         ),

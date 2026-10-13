@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/help_support_api.dart';
+import '../services/translation_service.dart';
 
 class NeedHelpBottomSheet extends StatefulWidget {
   const NeedHelpBottomSheet({super.key});
@@ -45,7 +46,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not launch phone dialer')),
+            const SnackBar(content: TrText('Could not launch phone dialer')),
           );
         }
       }
@@ -98,7 +99,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
             ),
           ),
           
-          Text(
+          TrText(
             'Need help?',
             style: GoogleFonts.inter(
               fontSize: 24.sp,
@@ -107,7 +108,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
             ),
           ),
           SizedBox(height: 8.h),
-          Text(
+          TrText(
             'We\'re here to assist with your chit plans & queries.',
             style: GoogleFonts.inter(
               fontSize: 14.sp,
@@ -183,7 +184,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TrText(
                       title,
                       style: GoogleFonts.inter(
                         fontSize: 16.sp,
@@ -192,7 +193,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
                       ),
                     ),
                     SizedBox(height: 4.h),
-                    Text(
+                    TrText(
                       subtitle,
                       style: GoogleFonts.inter(
                         fontSize: 12.sp,
@@ -210,7 +211,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
                   color: badgeColor,
                   borderRadius: BorderRadius.circular(6.r),
                 ),
-                child: Text(
+                child: TrText(
                   badgeText,
                   style: GoogleFonts.inter(
                     fontSize: 10.sp,
@@ -251,7 +252,7 @@ class _NeedHelpBottomSheetState extends State<NeedHelpBottomSheet> {
                 ),
                 child: Row(
                   children: [
-                    Text(
+                    TrText(
                       'Call',
                       style: GoogleFonts.inter(
                         fontSize: 14.sp,

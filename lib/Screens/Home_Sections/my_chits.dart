@@ -9,6 +9,7 @@ import '../../constants/app_colors.dart';
 import 'my_chit_detail.dart';
 import '../../services/profile_view_api.dart';
 import '../../services/shared_prefs_helper.dart';
+import '../../services/translation_service.dart';
 
 class MyChitsScreen extends StatefulWidget {
   final VoidCallback? onBackToHome;
@@ -39,16 +40,15 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
           _userName = savedName;
         });
       }
-    } else {
-      final response = await ProfileViewApiService.fetchProfile();
-      if (mounted && response != null && response['error'] == false) {
-        final profile = response['profile'];
-        if (profile != null && profile['name'] != null) {
-          setState(() {
-            _userName = profile['name'];
-          });
-          SharedPrefsHelper.saveUserName(profile['name']);
-        }
+    }
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted && response != null && response['error'] == false) {
+      final profile = response['profile'];
+      if (profile != null && profile['name'] != null) {
+        setState(() {
+          _userName = profile['name'];
+        });
+        SharedPrefsHelper.saveUserName(profile['name']);
       }
     }
   }
@@ -106,7 +106,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
           },
         ),
         titleSpacing: 0,
-        title: Text(
+        title: TrText(
           'My Chits',
           style: TextStyle(
             color: Colors.black,
@@ -140,7 +140,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(
                       color: AppColors.primaryColor,
@@ -175,7 +175,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
           _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _myChitsList.isEmpty
-              ? const Center(child: Text("No chits found."))
+              ? const Center(child: TrText("No chits found."))
               : ListView.builder(
                   padding: EdgeInsets.all(16.w),
                   itemCount: _myChitsList.length,
@@ -242,7 +242,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         color: AppColors.primaryColor,
                         borderRadius: BorderRadius.circular(10.r),
                       ),
-                      child: Text(
+                      child: TrText(
                         chitItem['Chit Status']?.toString().toUpperCase() ?? '',
                         style: TextStyle(
                           color: Colors.white,
@@ -264,29 +264,36 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                     children: [
                       Text(
                         "${_userName.isNotEmpty ? _userName : (chitItem['Chit Name']?.toString() ?? '')} - ${chitItem['Chit_id']?.toString() ?? ''}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 13.sp,
                         ),
                       ),
                       SizedBox(height: 4.h),
-                      Row(
-                        children: [
-                          Text(
-                            'GROUP CODE ',
-                            style: TextStyle(
-                              color: Color(0xFF475569),
-                              fontSize: 12.sp,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TrText(
+                              'GROUP CODE ',
+                              style: TextStyle(
+                                color: Color(0xFF475569),
+                                fontSize: 11.sp,
+                              ),
                             ),
-                          ),
-                          Text(
-                            chitItem['Group Name']?.toString() ?? '',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14.sp,
+                            Text(
+                              chitItem['Group Name']?.toString() ?? '',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13.sp,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -322,7 +329,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         ),
                       ),
                       SizedBox(width: 4.w),
-                      Text(
+                      TrText(
                         isPrized
                             ? 'Prized'
                             : chitItem['Status']?.toString() ?? '',
@@ -350,71 +357,91 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Chit Value',
-                          style: TextStyle(
-                            color: Color(0xFF475569),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrText(
+                            'Chit Value',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '₹ ${_formatAmount(chitItem['Chit Value'])}',
-                          style: TextStyle(
-                            color: const Color(0xFF2545C4),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.sp,
+                          SizedBox(height: 4.h),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '₹ ${_formatAmount(chitItem['Chit Value'])}',
+                              style: TextStyle(
+                                color: const Color(0xFF2545C4),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13.sp,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Start Date',
-                          style: TextStyle(
-                            color: Color(0xFF475569),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrText(
+                            'Start Date',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _formatDate(chitItem['Start Date']),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                            color: Color(0xFF1E293B),
+                          SizedBox(height: 4.h),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _formatDate(chitItem['Start Date']),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.sp,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'End Date',
-                          style: TextStyle(
-                            color: Color(0xFF475569),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrText(
+                            'End Date',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _formatDate(chitItem['End Date']),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                            color: Color(0xFF1E293B),
+                          SizedBox(height: 4.h),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _formatDate(chitItem['End Date']),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.sp,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -428,7 +455,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         onTap: () {
                           _showMiniStatementBottomSheet(context, chitItem);
                         },
-                        child: Text(
+                        child: TrText(
                           'Mini Statement',
                           style: TextStyle(
                             color: const Color(0xFF22378A),
@@ -453,7 +480,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            TrText(
                               'View Detail',
                               style: TextStyle(
                                 color: AppColors.primaryColor,
@@ -537,16 +564,18 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              'Mini Statement',
-                              style: TextStyle(
-                                fontSize: 22.sp,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Inter',
-                                color: const Color(0xFF1E293B),
+                            Flexible(
+                              child: TrText(
+                                'Mini Statement',
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Inter',
+                                  color: const Color(0xFF1E293B),
+                                ),
                               ),
                             ),
-                            SizedBox(width: 12.w),
+                            SizedBox(width: 8.w),
                             Container(
                               padding: EdgeInsets.symmetric(
                                 horizontal: 12.w,
@@ -557,26 +586,69 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                                 borderRadius: BorderRadius.circular(20.r),
                                 border: Border.all(color: const Color(0xFF0C8A4B)),
                               ),
-                              child: Text(
-                                'Group $groupCode',
-                                style: TextStyle(
-                                  color: const Color(0xFF0C8A4B),
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Inter',
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TrText(
+                                    'Group',
+                                    style: TextStyle(
+                                      color: const Color(0xFF0C8A4B),
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                  Text(
+                                    ' $groupCode',
+                                    style: TextStyle(
+                                      color: const Color(0xFF0C8A4B),
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Inter',
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                         SizedBox(height: 8.h),
-                        Text(
-                          'Group Code: $groupCode • $name • Chit Value: ₹ $chitValue',
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: const Color(0xFF64748B),
-                            fontFamily: 'Inter',
-                          ),
+                        Wrap(
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            TrText(
+                              'Group Code',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: const Color(0xFF64748B),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                            Text(
+                              ': $groupCode • $name • ',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: const Color(0xFF64748B),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                            TrText(
+                              'Chit Value',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: const Color(0xFF64748B),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                            Text(
+                              ': ₹ $chitValue',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: const Color(0xFF64748B),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -591,15 +663,15 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                       children: [
                         Expanded(
                           flex: 3,
-                          child: Text('DATE', style: _tableHeaderStyle()),
+                          child: TrText('DATE', style: _tableHeaderStyle()),
                         ),
                         Expanded(
                           flex: 1,
-                          child: Text('DUE', style: _tableHeaderStyle()),
+                          child: TrText('DUE', style: _tableHeaderStyle()),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text(
+                          child: TrText(
                             'DUE AMT',
                             textAlign: TextAlign.right,
                             style: _tableHeaderStyle(),
@@ -607,7 +679,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text(
+                          child: TrText(
                             'DIVI',
                             textAlign: TextAlign.right,
                             style: _tableHeaderStyle(),
@@ -615,7 +687,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text(
+                          child: TrText(
                             'ACTUAL DUE',
                             textAlign: TextAlign.right,
                             style: _tableHeaderStyle(),
@@ -623,7 +695,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text(
+                          child: TrText(
                             'BALANCE',
                             textAlign: TextAlign.right,
                             style: _tableHeaderStyle(),
@@ -639,7 +711,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                         ? const Center(child: CircularProgressIndicator())
                         : snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty
                             ? Center(
-                                child: Text(
+                                child: TrText(
                                   'No statement data available.',
                                   style: TextStyle(color: Colors.grey, fontSize: 14.sp),
                                 ),

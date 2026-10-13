@@ -14,6 +14,7 @@ import '../../services/chit_scheme_api.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../Home_Sections/drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 /// The Settings screen displaying Account, App Preferences, Security & Privacy,
 /// Support, About, and Logout options, using the asset icons provided.
@@ -31,12 +32,28 @@ class _SettingScreenState extends State<SettingScreen> {
   bool _isDrawerOpen = false;
   
   String _appVersion = 'Loading...';
-  String _selectedLanguage = 'English';
+  String _selectedLanguage = TranslationService.currentLanguage;
 
   @override
   void initState() {
     super.initState();
+    _selectedLanguage = TranslationService.currentLanguage;
     _fetchAppVersion();
+    TranslationService.currentLanguageNotifier.addListener(_onLanguageChanged);
+  }
+
+  @override
+  void dispose() {
+    TranslationService.currentLanguageNotifier.removeListener(_onLanguageChanged);
+    super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {
+        _selectedLanguage = TranslationService.currentLanguage;
+      });
+    }
   }
 
   Future<void> _fetchAppVersion() async {
@@ -97,8 +114,8 @@ class _SettingScreenState extends State<SettingScreen> {
           ),
           titleSpacing: 0,
           surfaceTintColor: Colors.transparent,
-          title: Text(
-            'Setting',
+          title: TrText(
+            'Settings',
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w600,
@@ -137,7 +154,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 _SettingsTile(
                   assetPath: 'assets/settings/language.png',
                   title: 'Language',
-                  trailingText: _selectedLanguage,
+                  trailingText: _selectedLanguage == 'Tamil' ? 'தமிழ்' : 'English',
                   onTap: () => _showLanguageBottomSheet(context),
                 ),
               ]),
@@ -240,7 +257,7 @@ class _SettingScreenState extends State<SettingScreen> {
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: EdgeInsets.only(left: 4.w, bottom: 8.h),
-      child: Text(
+      child: TrText(
         title,
         style: GoogleFonts.inter(
           fontSize: 12.sp,
@@ -307,7 +324,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   fit: BoxFit.contain,
                 ),
                 SizedBox(width: 8.w),
-                Text(
+                TrText(
                   'Logout',
                   style: GoogleFonts.inter(
                     fontSize: 16.sp,
@@ -324,87 +341,141 @@ class _SettingScreenState extends State<SettingScreen> {
     );
   }
 
-  void _handleItemTap(BuildContext context, String title) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$title tapped'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  }
-
   void _showLanguageBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
       builder: (BuildContext ctx) {
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Select Language',
-                style: GoogleFonts.inter(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              SizedBox(height: 16.h),
-              ListTile(
-                title: Text(
-                  'English',
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    color: _selectedLanguage == 'English'
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
-                    fontWeight: _selectedLanguage == 'English'
-                        ? FontWeight.w600
-                        : FontWeight.normal,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            Widget buildLanguageOption(String langName, String title) {
+              final bool isSelected = _selectedLanguage == langName;
+              return GestureDetector(
+                onTap: () async {
+                  setModalState(() {
+                    _selectedLanguage = langName;
+                  });
+                  setState(() {
+                    _selectedLanguage = langName;
+                  });
+                  await TranslationService.changeLanguage(langName);
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                    }
+                  });
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primary.withOpacity(0.06) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: isSelected ? AppColors.primary : const Color(0xFFE5E7EB),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? AppColors.primary : AppColors.textPrimary,
+                        ),
+                      ),
+                      if (isSelected)
+                        Container(
+                          width: 22.r,
+                          height: 22.r,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.check,
+                            size: 14.sp,
+                            color: Colors.white,
+                          ),
+                        )
+                      else
+                        Container(
+                          width: 22.r,
+                          height: 22.r,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF9CA3AF),
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                trailing: _selectedLanguage == 'English'
-                    ? Icon(Icons.check_circle, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedLanguage = 'English';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              const Divider(),
-              ListTile(
-                title: Text(
-                  'Tamil',
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    color: _selectedLanguage == 'Tamil'
-                        ? AppColors.primary
-                        : AppColors.textPrimary,
-                    fontWeight: _selectedLanguage == 'Tamil'
-                        ? FontWeight.w600
-                        : FontWeight.normal,
+              );
+            }
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 24.h),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD1D5DB),
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
                   ),
-                ),
-                trailing: _selectedLanguage == 'Tamil'
-                    ? Icon(Icons.check_circle, color: AppColors.primary)
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedLanguage = 'Tamil';
-                  });
-                  Navigator.pop(ctx);
-                },
+                  SizedBox(height: 16.h),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TrText(
+                        'Select Language',
+                        style: GoogleFonts.inter(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Container(
+                          width: 30.r,
+                          height: 30.r,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF3F4F6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            size: 16.sp,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20.h),
+                  buildLanguageOption('English', 'English'),
+                  SizedBox(height: 20.h),
+                  buildLanguageOption('Tamil', 'Tamil (தமிழ்)'),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -418,7 +489,7 @@ class _SettingScreenState extends State<SettingScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r),
           ),
-          title: Text(
+          title: TrText(
             'Logout',
             style: GoogleFonts.inter(
               fontWeight: FontWeight.bold,
@@ -426,7 +497,7 @@ class _SettingScreenState extends State<SettingScreen> {
               color: AppColors.textPrimary,
             ),
           ),
-          content: Text(
+          content: TrText(
             'Are you sure you want to logout?',
             style: GoogleFonts.inter(
               fontSize: 14.sp,
@@ -436,7 +507,7 @@ class _SettingScreenState extends State<SettingScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text(
+              child: TrText(
                 'Cancel',
                 style: GoogleFonts.inter(
                   color: AppColors.textSecondary,
@@ -467,7 +538,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   borderRadius: BorderRadius.circular(10.r),
                 ),
               ),
-              child: Text(
+              child: TrText(
                 'Logout',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.bold,
@@ -521,7 +592,7 @@ class _SettingsTile extends StatelessWidget {
 
               // Title (subheading)
               Expanded(
-                child: Text(
+                child: TrText(
                   title,
                   style: GoogleFonts.inter(
                     fontSize: 14.66.sp,

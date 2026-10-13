@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
@@ -12,6 +13,7 @@ import '../settings_sections/faq.dart';
 import '../../services/profile_view_api.dart';
 import '../../services/shared_prefs_helper.dart';
 import '../../services/chit_scheme_api.dart';
+import '../../services/translation_service.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,6 +36,12 @@ class _HomeScreenState extends State<HomeScreen> {
   List<dynamic> _exploreChits = [];
   bool _isLoadingExplore = true;
 
+  List<String> _bannerImages = [];
+  bool _isLoadingBanners = true;
+  int _currentBannerIndex = 0;
+  late final PageController _bannerPageController;
+  Timer? _bannerTimer;
+
   final TextEditingController _investmentController = TextEditingController();
   final TextEditingController _emiAmountController = TextEditingController();
   String _noOfEmis = '20';
@@ -41,6 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _bannerTimer?.cancel();
+    _bannerPageController.dispose();
     _investmentController.dispose();
     _emiAmountController.dispose();
     super.dispose();
@@ -49,8 +59,55 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _bannerPageController = PageController();
     _fetchProfileName();
     _fetchExploreChits();
+    _fetchHomeBanners();
+  }
+
+  Future<void> _fetchHomeBanners() async {
+    final data = await ChitSchemeApiService.fetchHomeBanners();
+    if (data != null && data.isNotEmpty) {
+      final List<String> urls = [];
+      for (var item in data) {
+        if (item is Map &&
+            item['file'] != null &&
+            item['file'].toString().isNotEmpty) {
+          urls.add(item['file'].toString());
+        } else if (item is String && item.isNotEmpty) {
+          urls.add(item);
+        }
+      }
+      if (mounted) {
+        setState(() {
+          _bannerImages = urls;
+          _isLoadingBanners = false;
+        });
+        _startBannerAutoScroll();
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoadingBanners = false;
+        });
+      }
+    }
+  }
+
+  void _startBannerAutoScroll() {
+    _bannerTimer?.cancel();
+    if (_bannerImages.length > 1) {
+      _bannerTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+        if (_bannerPageController.hasClients) {
+          final nextIndex = (_currentBannerIndex + 1) % _bannerImages.length;
+          _bannerPageController.animateToPage(
+            nextIndex,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _fetchExploreChits() async {
@@ -91,18 +148,17 @@ class _HomeScreenState extends State<HomeScreen> {
           _userName = savedName;
         });
       }
-    } else {
-      final response = await ProfileViewApiService.fetchProfile();
-      if (response != null && response['error'] == false) {
-        final profile = response['profile'];
-        if (profile != null && profile['name'] != null) {
-          if (mounted) {
-            setState(() {
-              _userName = "${profile['name']}";
-            });
-          }
-          SharedPrefsHelper.saveUserName(_userName);
+    }
+    final response = await ProfileViewApiService.fetchProfile();
+    if (response != null && response['error'] == false) {
+      final profile = response['profile'];
+      if (profile != null && profile['name'] != null) {
+        if (mounted) {
+          setState(() {
+            _userName = "${profile['name']}";
+          });
         }
+        SharedPrefsHelper.saveUserName(_userName);
       }
     }
   }
@@ -122,13 +178,30 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icon(Icons.menu, color: Colors.black, size: 24.w),
           onPressed: widget.onMenuTap ?? () {},
         ),
-        title: Text(
-          'Hello $_userName',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-          ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TrText(
+              'Hello',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Flexible(
+              child: Text(
+                ' $_userName',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
         actions: [
           GestureDetector(
@@ -153,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(color: primaryColor, fontSize: 12.sp),
                   ),
@@ -186,115 +259,64 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Banner
-                Image.asset(
-                  'assets/home_images/home_banner.png',
-                  width: double.infinity,
-                  height: 150.h,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 150.h,
-                    color: primaryColor.withOpacity(0.2),
-                    child: const Center(
-                      child: Text('assets/home_images/home_banner.png missing'),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                // Dot Indicator
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 8.w,
-                      height: 8.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Container(
-                      width: 8.w,
-                      height: 8.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Container(
-                      width: 8.w,
-                      height: 8.w,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Container(
-                      width: 24.w,
-                      height: 8.w,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor,
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                    ),
-                  ],
-                ),
+                // Banner Section
+                _buildBannerSection(primaryColor),
                 SizedBox(height: 16.h),
 
                 // Horizontal Cards (My Chit, Available Chits, Chit Scheme)
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 14.w),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildCategoryCard(
-                          'My Chit',
-                          'Chit Overview',
-                          const [Color(0xFFFFFFFF), Color(0xFF43D389)],
-                          'assets/home_images/book.png',
-                          onTap: widget.onMyChitsTap,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: _buildCategoryCard(
+                            'My Chit',
+                            'Chit Overview',
+                            const [Color(0xFFFFFFFF), Color(0xFF43D389)],
+                            'assets/home_images/book.png',
+                            onTap: widget.onMyChitsTap,
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: _buildCategoryCard(
-                          'Available Chits',
-                          'View available chit plans',
-                          const [Color(0xFFFFFFFF), Color(0xFFE9C958)],
-                          'assets/home_images/calender.png',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ChitSchemesScreen(initialTab: 1),
-                              ),
-                            );
-                          },
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: _buildCategoryCard(
+                            'Available Chits',
+                            'View available chit plans',
+                            const [Color(0xFFFFFFFF), Color(0xFFE9C958)],
+                            'assets/home_images/calender.png',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ChitSchemesScreen(initialTab: 1),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: _buildCategoryCard(
-                          'Chit Scheme',
-                          'Explore available chit plans',
-                          const [Color(0xFFFFFFFF), Color(0xFFD23D51)],
-                          'assets/home_images/group.png',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ChitSchemesScreen(initialTab: 0),
-                              ),
-                            );
-                          },
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: _buildCategoryCard(
+                            'Chit Scheme',
+                            'Explore available chit plans',
+                            const [Color(0xFFFFFFFF), Color(0xFFD23D51)],
+                            'assets/home_images/group.png',
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ChitSchemesScreen(initialTab: 0),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 SizedBox(height: 20.h),
@@ -312,43 +334,40 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 12.r,
-                                  backgroundColor: primaryColor,
-                                  child: Icon(
-                                    Icons.currency_rupee,
-                                    color: Colors.white,
-                                    size: 15.w,
+                            CircleAvatar(
+                              radius: 12.r,
+                              backgroundColor: primaryColor,
+                              child: Icon(
+                                Icons.currency_rupee,
+                                color: Colors.white,
+                                size: 15.w,
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  TrText(
+                                    'Payment Due',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16.sp,
+                                      color: primaryColor,
+                                    ),
                                   ),
-                                ),
-                                SizedBox(width: 12.w),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Payment Due',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16.sp,
-                                        color: primaryColor,
-                                      ),
+                                  SizedBox(height: 3.h),
+                                  TrText(
+                                    'You have 1 pending payment',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 12.sp,
                                     ),
-                                    SizedBox(height: 3.h),
-                                    Text(
-                                      'You have 1 pending payment',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 12.sp,
-                                      ),
-                                    ),
-                                    SizedBox(height: 5.h),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                  SizedBox(height: 5.h),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -430,26 +449,29 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Payment Assistance',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.sp,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TrText(
+                                'Payment Assistance',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.sp,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 4.h),
-                            Text(
-                              'Need help paying your due?\nContact your agent.',
-                              style: TextStyle(
-                                color: Color(0xFF767676),
-                                fontSize: 12.sp,
+                              SizedBox(height: 4.h),
+                              TrText(
+                                'Need help paying your due?\nContact your agent.',
+                                style: TextStyle(
+                                  color: Color(0xFF767676),
+                                  fontSize: 12.sp,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        SizedBox(width: 8.w),
                         ElevatedButton(
                           onPressed: () {
                             showModalBottomSheet(
@@ -466,7 +488,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               borderRadius: BorderRadius.circular(20.r),
                             ),
                           ),
-                          child: Text(
+                          child: TrText(
                             'Call Now',
                             style: TextStyle(
                               fontSize: 14.sp,
@@ -492,66 +514,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Let\'s Plan Your Growth',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      TrText(
+                        'Let\'s Plan Your Growth',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                      SizedBox(height: 14.h),
-                      Row(
+                      SizedBox(height: 8.h),
+                      Wrap(
+                        spacing: 16.w,
+                        runSpacing: 8.h,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Icon(
-                            Icons.circle_outlined,
-                            color: Colors.white,
-                            size: 15.w,
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.circle_outlined,
+                                color: Colors.white,
+                                size: 15.w,
+                              ),
+                              SizedBox(width: 6.w),
+                              TrText(
+                                'Smart Savings Scheme',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Smart Savings Scheme',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13.sp,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.circle,
+                                color: const Color(0xFFE2E2E2),
+                                size: 15.w,
+                              ),
+                              SizedBox(width: 6.w),
+                              TrText(
+                                'Quick Cash',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.5),
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 16.w),
-                          Icon(
-                            Icons.circle,
-                            color: Color(0xFFE2E2E2),
-                            size: 15.w,
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Quick Cash',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 13.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10.h),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.circle,
-                            color: Color(0xFFE2E2E2),
-                            size: 15.w,
-                          ),
-                          SizedBox(width: 6.w),
-                          Text(
-                            'Flexi Cash',
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
-                              fontSize: 13.sp,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.circle,
+                                color: const Color(0xFFE2E2E2),
+                                size: 15.w,
+                              ),
+                              SizedBox(width: 6.w),
+                              TrText(
+                                'Flexi Cash',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.5),
+                                  fontSize: 13.sp,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -580,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TrText(
                                   'Investment Amount ₹',
                                   style: TextStyle(
                                     color: primaryColor,
@@ -614,7 +643,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
-                                Text(
+                                TrText(
                                   'Enter values in multiples of Lakhs (min-1 Lakh to max-1 Crore)',
                                   style: TextStyle(
                                     fontSize: 10.sp,
@@ -623,7 +652,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 SizedBox(height: 10.h),
                                 Center(
-                                  child: Text(
+                                  child: TrText(
                                     'Or',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w500,
@@ -632,7 +661,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 10.h),
-                                Text(
+                                TrText(
                                   'EMI Amount ₹',
                                   style: TextStyle(
                                     color: primaryColor,
@@ -666,7 +695,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
-                                Text(
+                                TrText(
                                   'Enter values in multiples of 5000 (min-5000 to max-5Lakhs)',
                                   style: TextStyle(
                                     fontSize: 10.sp,
@@ -681,7 +710,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
+                                          TrText(
                                             'No Of EMI\'s',
                                             style: TextStyle(
                                               color: primaryColor,
@@ -746,7 +775,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
+                                          TrText(
                                             'No Of Chit Members',
                                             style: TextStyle(
                                               color: primaryColor,
@@ -814,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Expanded(
-                                      child: Text(
+                                      child: TrText(
                                         'Note:\nEnter Values In Multiples Of\nLakhs In Investment.',
                                         style: TextStyle(
                                           fontSize: 12.sp,
@@ -859,7 +888,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                           padding: EdgeInsets.zero,
                                         ),
-                                        child: Text(
+                                        child: TrText(
                                           'Submit',
                                           style: TextStyle(fontSize: 14.sp),
                                         ),
@@ -881,7 +910,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TrText(
                         'Explore',
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -892,7 +921,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _isLoadingExplore
                           ? const Center(child: CircularProgressIndicator())
                           : _exploreChits.isEmpty
-                          ? const Center(child: Text('No chits available'))
+                          ? const Center(child: TrText('No chits available'))
                           : SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: IntrinsicHeight(
@@ -932,7 +961,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TrText(
                         'Quick Links',
                         style: TextStyle(
                           fontSize: 16.sp,
@@ -990,7 +1019,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 70.h,
+        constraints: BoxConstraints(minHeight: 70.h),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
@@ -999,7 +1028,7 @@ class _HomeScreenState extends State<HomeScreen> {
             stops: const [-0.07, 0.9],
           ),
           borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(color: Color(0xFFF4F2F2), width: 0.68),
+          border: Border.all(color: const Color(0xFFF4F2F2), width: 0.68),
         ),
         child: Stack(
           children: [
@@ -1015,8 +1044,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 5.h),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1025,10 +1055,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: EdgeInsets.all(5.w),
                         decoration: BoxDecoration(
-                          color: Color(0xFFE2F7F6),
+                          color: const Color(0xFFE2F7F6),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Color(0xFFDFDFDF),
+                            color: const Color(0xFFDFDFDF),
                             width: 0.2,
                           ),
                         ),
@@ -1039,7 +1069,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           fit: BoxFit.contain,
                         ),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       Icon(
                         Icons.chevron_right,
                         size: 20.w,
@@ -1047,17 +1077,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 5.h),
-                  Text(
+                  SizedBox(height: 4.h),
+                  TrText(
                     title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 11.sp,
+                      fontSize: 10.sp,
                     ),
                   ),
                   SizedBox(height: 2.h),
-                  Text(
+                  TrText(
                     subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 7.sp, color: Colors.black87),
                   ),
                 ],
@@ -1117,9 +1151,18 @@ class _HomeScreenState extends State<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$slotsLeft slots left',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$slotsLeft ',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
+                  ),
+                  TrText(
+                    'slots left',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12.sp),
+                  ),
+                ],
               ),
               if (isPopular)
                 Container(
@@ -1129,7 +1172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: Border.all(color: Color(0xFFDA5353)),
                     borderRadius: BorderRadius.circular(4.r),
                   ),
-                  child: Text(
+                  child: TrText(
                     'Popular',
                     style: TextStyle(color: Color(0xFFDA5353), fontSize: 10.sp),
                   ),
@@ -1146,22 +1189,53 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           SizedBox(height: 3.h),
-          Text(
-            'Subscription - ₹ $subAmount',
-            style: TextStyle(color: primaryColor, fontSize: 14.sp),
+          Row(
+            children: [
+              TrText(
+                'Subscription',
+                style: TextStyle(color: primaryColor, fontSize: 14.sp),
+              ),
+              Text(
+                ' - ₹ $subAmount',
+                style: TextStyle(color: primaryColor, fontSize: 14.sp),
+              ),
+            ],
           ),
           SizedBox(height: 8.h),
-          Text(
-            'Installments - $installments months',
-            style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
+          Row(
+            children: [
+              TrText(
+                'Installments',
+                style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
+              ),
+              Text(
+                ' - $installments ',
+                style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
+              ),
+              TrText(
+                'months',
+                style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
+              ),
+            ],
           ),
           // Start date is typically not provided in this API so omitting or keeping placeholder
           // But I'll hide it if it's 'TBD' or just show placeholder if we want to keep UI exactly same.
           // The user instruction implies "bind the available chit" so I'll just leave it out if we don't have it or keep it as placeholder.
-          Text(
-            startDate != 'TBD' ? 'Start date : $startDate' : '',
-            style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
-          ),
+          if (startDate != 'TBD')
+            Row(
+              children: [
+                TrText(
+                  'Start date',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
+                ),
+                Text(
+                  ' : $startDate',
+                  style: TextStyle(color: Colors.grey[500], fontSize: 11.sp),
+                ),
+              ],
+            )
+          else
+            const SizedBox(),
           SizedBox(height: 5.h),
           SizedBox(
             width: double.infinity,
@@ -1181,7 +1255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                   ),
-                  child: Text(
+                  child: TrText(
                     'Enquire now',
                     style: TextStyle(
                       fontSize: 14.sp,
@@ -1225,11 +1299,11 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: ListTile(
         leading: Image.asset(imagePath, height: 25.h, width: 25.w),
-        title: Text(
+        title: TrText(
           title,
           style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12.sp),
         ),
-        subtitle: Text(
+        subtitle: TrText(
           subtitle,
           style: TextStyle(color: Colors.grey, fontSize: 12.sp),
         ),
@@ -1245,82 +1319,126 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildPaymentItem(String id, String dueDate, String amount) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: Color(0xFFF6F6F6),
+        color: const Color(0xFFF6F6F6),
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(color: const Color(0xFFD7D7D7), width: 0.5),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // ID
-          Text(
-            id,
-            style: TextStyle(
-              color: const Color(0xFF1E3A8A), // Dark blue
-              fontWeight: FontWeight.w600,
-              fontSize: 14.sp,
+          Flexible(
+            flex: 3,
+            fit: FlexFit.tight,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                id,
+                style: TextStyle(
+                  color: const Color(0xFF1E3A8A), // Dark blue
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12.sp,
+                ),
+              ),
             ),
           ),
+          SizedBox(width: 4.w),
           // Due Date
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Due Date',
-                style: TextStyle(color: Colors.grey, fontSize: 10.sp),
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                dueDate,
-                style: TextStyle(
-                  color: const Color(0xFFDB1111),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp,
+          Flexible(
+            flex: 4,
+            fit: FlexFit.tight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TrText(
+                  'Due Date',
+                  style: TextStyle(color: Colors.grey, fontSize: 9.sp),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                SizedBox(height: 2.h),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    dueDate,
+                    style: TextStyle(
+                      color: const Color(0xFFDB1111),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          SizedBox(width: 4.w),
           // Amount
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Amount',
-                style: TextStyle(color: Colors.grey, fontSize: 10.sp),
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                '₹ $amount',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12.sp,
-                  color: Colors.black,
+          Flexible(
+            flex: 3,
+            fit: FlexFit.tight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TrText(
+                  'Amount',
+                  style: TextStyle(color: Colors.grey, fontSize: 9.sp),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
+                SizedBox(height: 2.h),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '₹ $amount',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11.sp,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          SizedBox(width: 4.w),
           // Button
-          SizedBox(
-            height: 32.h,
-            child: ElevatedButton(
-              onPressed: () {
-                if (widget.onPaymentTap != null) {
-                  widget.onPaymentTap!();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD40909),
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 16.w),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r),
+          Flexible(
+            flex: 4,
+            fit: FlexFit.tight,
+            child: SizedBox(
+              height: 28.h,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (widget.onPaymentTap != null) {
+                    widget.onPaymentTap!();
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD40909),
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 4.w),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.r),
+                  ),
                 ),
-              ),
-              child: Text(
-                'Pay Now',
-                style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w700),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: TrText(
+                    'Pay Now',
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -1328,4 +1446,102 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildBannerSection(Color primaryColor) {
+    if (_isLoadingBanners) {
+      return Container(
+        width: double.infinity,
+        height: 150.h,
+        color: Colors.grey.shade100,
+        child: const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryColor),
+        ),
+      );
+    }
+
+    if (_bannerImages.isEmpty) {
+      return Image.asset(
+        'assets/home_images/home_banner.png',
+        width: double.infinity,
+        height: 150.h,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          height: 150.h,
+          color: primaryColor.withValues(alpha: 0.2),
+          child: const Center(
+            child: Text('assets/home_images/home_banner.png missing'),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 150.h,
+          width: double.infinity,
+          child: PageView.builder(
+            controller: _bannerPageController,
+            itemCount: _bannerImages.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentBannerIndex = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              final imageUrl = _bannerImages[index];
+              return Image.network(
+                imageUrl,
+                width: double.infinity,
+                height: 150.h,
+                fit: BoxFit.fill,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 150.h,
+                    color: Colors.grey.shade100,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryColor,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 150.h,
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: Icon(Icons.broken_image, color: Colors.grey),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (_bannerImages.length > 1) ...[
+          SizedBox(height: 12.h),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_bannerImages.length, (index) {
+              final bool isSelected = index == _currentBannerIndex;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                margin: EdgeInsets.symmetric(horizontal: 2.w),
+                width: isSelected ? 24.w : 8.w,
+                height: 8.w,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primaryColor
+                      : Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
+    );
+  }
 }
+

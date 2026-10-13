@@ -92,11 +92,6 @@ class WelcomeScreen extends StatelessWidget {
 
                   SizedBox(height: 8.h),
 
-                  // Star rating (5 / 5)
-                  const _StarRating(rating: 5.0),
-
-                  SizedBox(height: 8.h),
-                  
                   GestureDetector(
                     onTap: () async {
                       final Uri url = Uri.parse('https://share.google/pKfmHR3lFxKz51G3J');
@@ -104,29 +99,19 @@ class WelcomeScreen extends StatelessWidget {
                         await launchUrl(url, mode: LaunchMode.externalApplication);
                       }
                     },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.star_sharp,
-                          color: AppColors.starGold,
-                          size: 24.r,
-                        ),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '4.9 176 Google reviews',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF1E3A8A), // Dark blue
-                            fontSize: 15.sp,
-                            fontWeight: FontWeight.w500,
-                            decoration: TextDecoration.underline,
-                            decorationColor: const Color(0xFF1E3A8A),
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      'Google reviews',
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFF22378A), // Dark blue
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        decorationColor: const Color(0xFF22378A),
+                      ),
                     ),
                   ),
-
+                  SizedBox(height: 8.h),
+                  const _StarRating(rating: 5.0),
                   SizedBox(height: 24.h),
 
                   // Get Started button navigating to UserTypeSelectionScreen
@@ -160,33 +145,6 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  SizedBox(height: 16.h),
-
-                  // Terms & Privacy text matching Figma 10px / 13px line-height
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: GoogleFonts.inter(
-                        fontSize: 13.sp,
-                        height: 1.6,
-                        color: AppColors.textLightGray,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      children: [
-                        const TextSpan(text: 'By continuing,you agree to our\n'),
-                        TextSpan(
-                          text: 'Terms & Use & Privacy Policy',
-                          style: GoogleFonts.inter(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                   SizedBox(height: 20.h),
                 ],
               ),

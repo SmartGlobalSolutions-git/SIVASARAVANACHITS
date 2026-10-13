@@ -1,5 +1,4 @@
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
-
 import 'package:flutter/material.dart';
 import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'package:siva_saravana/Screens/Home_Sections/notification_screen.dart';
@@ -8,6 +7,7 @@ import 'package:siva_saravana/constants/app_colors.dart';
 import 'package:siva_saravana/Screens/Home_Sections/drawers_screen.dart';
 import 'screen_utils.dart';
 import '../../services/chit_scheme_api.dart';
+import '../../services/translation_service.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   final int chitId;
@@ -122,7 +122,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               }
             },
           ),
-        title: Text(
+        title: TrText(
           'Subscription Plan',
           style: TextStyle(
             fontSize: 16.sp,
@@ -153,7 +153,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(color: const Color(0xFF018F46), fontSize: 12.sp),
                   ),
@@ -359,7 +359,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                 children: [
                                                   Expanded(
                                                     flex: 2,
-                                                    child: Text(
+                                                    child: TrText(
                                                       'Total',
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
@@ -442,7 +442,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                                   ),
                                                   SizedBox(width: 4.w),
                                                   Expanded(
-                                                    child: Text(
+                                                    child: TrText(
                                                       'This is an indicative plan. Values may vary based on actual chit group rules.',
                                                       maxLines: 2,
                                                       overflow: TextOverflow.ellipsis,
@@ -491,7 +491,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   borderRadius: BorderRadius.circular(26.sp),
                                 ),
                               ),
-                              child: Text(
+                              child: TrText(
                                 'Enquire Now',
                                 style: TextStyle(
                                   fontSize: 17.sp,
@@ -541,7 +541,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           Container(
             color: const Color(0xFF4A4DE7),
             padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
-            child: Text(
+            child: TrText(
               'Available Slots',
               style: TextStyle(
                 fontSize: 16.sp,
@@ -559,7 +559,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               children: [
                 Expanded(
                   flex: 3,
-                  child: Text(
+                  child: TrText(
                     'Ticket Type',
                     style: TextStyle(
                       fontSize: 13.5.sp,
@@ -570,7 +570,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ),
                 Expanded(
                   flex: 3,
-                  child: Text(
+                  child: TrText(
                     'Ticket Value',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -582,7 +582,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 ),
                 Expanded(
                   flex: 3,
-                  child: Text(
+                  child: TrText(
                     'Available Slots',
                     textAlign: TextAlign.right,
                     style: TextStyle(
@@ -617,7 +617,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     // Ticket Type
                     Expanded(
                       flex: 3,
-                      child: Text(
+                      child: TrText(
                         row['type']!,
                         style: TextStyle(
                           fontSize: 13.5.sp,
@@ -642,7 +642,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     // Available Slots
                     Expanded(
                       flex: 3,
-                      child: Text(
+                      child: TrText(
                         row['slots']!,
                         textAlign: TextAlign.right,
                         style: TextStyle(
@@ -666,7 +666,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget _buildHeaderCell(String label, {required int flex}) {
     return Expanded(
       flex: flex,
-      child: Text(
+      child: TrText(
         label,
         textAlign: TextAlign.center,
         style: TextStyle(

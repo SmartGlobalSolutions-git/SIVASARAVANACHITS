@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_saravana/Screens/Home_Sections/need_help_screen.dart';
 import 'app_colors.dart';
 import '../../services/faq_api.dart';
+import '../../services/translation_service.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -134,7 +135,7 @@ class _FAQScreenState extends State<FAQScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             'FAQ',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -173,7 +174,7 @@ class _FAQScreenState extends State<FAQScreen> {
                   else if (_errorMessage != null)
                     Center(child: Padding(
                       padding: EdgeInsets.symmetric(vertical: 50.h),
-                      child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      child: TrText(_errorMessage!, style: const TextStyle(color: Colors.red)),
                     ))
                   else
                   ListView.separated(
@@ -268,7 +269,7 @@ class _FAQScreenState extends State<FAQScreen> {
 
                     // Question text
                     Expanded(
-                      child: Text(
+                      child: TrText(
                         item.question,
                         style: questionStyle,
                       ),
@@ -299,7 +300,7 @@ class _FAQScreenState extends State<FAQScreen> {
                       color: AppColors.faqAnswerBg,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
-                    child: Text(
+                    child: TrText(
                       item.answer,
                       style: answerStyle,
                     ),
@@ -350,7 +351,7 @@ class _FAQScreenState extends State<FAQScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                TrText(
                   'Still have a\nquestion?',
                   style: GoogleFonts.inter(
                     fontSize: 13.sp,
@@ -360,7 +361,7 @@ class _FAQScreenState extends State<FAQScreen> {
                   ),
                 ),
                 SizedBox(height: 3.h),
-                Text(
+                TrText(
                   'We\'re here to help you.',
                   style: GoogleFonts.inter(
                     fontSize: 11.sp,
@@ -398,7 +399,7 @@ class _FAQScreenState extends State<FAQScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    TrText(
                       'Contact Support',
                       style: GoogleFonts.inter(
                         fontSize: 11.5.sp,

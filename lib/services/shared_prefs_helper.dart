@@ -72,23 +72,40 @@ class SharedPrefsHelper {
     return prefs.getString('user_name') ?? '';
   }
 
+  static bool? _cachedIsNewUser;
+  static bool? get cachedIsNewUser => _cachedIsNewUser;
+
   // Save Is New User
   static Future<void> saveIsNewUser(bool isNewUser) async {
+    _cachedIsNewUser = isNewUser;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_new_user', isNewUser);
   }
 
   // Get Is New User
   static Future<bool> getIsNewUser() async {
+    if (_cachedIsNewUser != null) {
+      return _cachedIsNewUser!;
+    }
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool('is_new_user') ?? false;
+    final value = prefs.getBool('is_new_user') ?? false;
+    _cachedIsNewUser = value;
+    return value;
+  }
+
+  // Clear User Name
+  static Future<void> clearUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_name');
   }
 
   // Clear Preferences on Logout
   static Future<void> clearPreferences() async {
+    _cachedIsNewUser = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('cus_id');
+    await prefs.remove('user_name');
     await prefs.remove('is_new_user');
   }
 }

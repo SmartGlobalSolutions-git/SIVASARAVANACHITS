@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "104388053804",
+    "project_id": "sivasaravana-chits",
+    "storage_bucket": "sivasaravana-chits.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104388053804:android:f936b129cd9f5728d5fa89",
+        "android_client_info": {
+          "package_name": "com.siva_saravana.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2CBIMB-XbZiJES5DWs4PRF8GZKHTxg3E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

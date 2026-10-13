@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../services/translation_service.dart';
 import '../Home_Sections/drawers_screen.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
 import 'payment_amount.dart';
@@ -56,7 +57,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             'Payment Methods',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -73,7 +74,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TrText(
                     'Total Amount to Pay',
                     style: TextStyle(
                       color: Colors.grey.shade600,
@@ -91,7 +92,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                     ),
                   ),
                   SizedBox(height: 30.h),
-                  Text(
+                  TrText(
                     'Select Payment Method',
                     style: TextStyle(
                       color: Colors.black87,
@@ -139,7 +140,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TrText(
                                   'Online Payment',
                                   style: TextStyle(
                                     fontSize: 15.sp,
@@ -148,7 +149,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
-                                Text(
+                                TrText(
                                   'Pay securely using UPI, Debit/Credit Card, Net Banking',
                                   style: TextStyle(
                                     fontSize: 12.sp,
@@ -215,7 +216,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TrText(
                                   'NEFT / RTGS/QR',
                                   style: TextStyle(
                                     fontSize: 15.sp,
@@ -224,7 +225,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                                   ),
                                 ),
                                 SizedBox(height: 4.h),
-                                Text(
+                                TrText(
                                   'Pay using NEFT or RTGS and upload payment proof',
                                   style: TextStyle(
                                     fontSize: 12.sp,
@@ -268,7 +269,7 @@ class _PaymentMethodScreenState extends State<PaymentMethodScreen> {
                         borderRadius: BorderRadius.circular(25.r),
                       ),
                       alignment: Alignment.center,
-                      child: Text(
+                      child: TrText(
                         'Continue',
                         style: TextStyle(
                           color: Colors.white,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../services/translation_service.dart';
+import '../../services/payment_api.dart';
 import '../Home_Sections/drawers_screen.dart';
 import 'pending_history.dart';
 import 'approval_history.dart';
@@ -7,7 +9,7 @@ import 'approval_history.dart';
 class PaymentHistory extends StatefulWidget {
   final VoidCallback? onBackTap;
   final VoidCallback? onMenuTap;
-  const PaymentHistory({Key? key, this.onBackTap, this.onMenuTap}) : super(key: key);
+  const PaymentHistory({super.key, this.onBackTap, this.onMenuTap});
 
   @override
   State<PaymentHistory> createState() => _PaymentHistoryState();
@@ -17,6 +19,36 @@ class _PaymentHistoryState extends State<PaymentHistory> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isDrawerOpen = false;
   bool isMyChitsOverview = false;
+
+  bool _isLoading = true;
+  List<dynamic> _payments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPaymentHistory();
+  }
+
+  Future<void> _fetchPaymentHistory() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final data = await PaymentApiService.fetchPaymentHistory();
+    if (!mounted) return;
+
+    if (data != null && data['payments'] is List) {
+      setState(() {
+        _payments = List<dynamic>.from(data['payments']);
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _payments = [];
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +87,7 @@ class _PaymentHistoryState extends State<PaymentHistory> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             'Payment History',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -64,155 +96,206 @@ class _PaymentHistoryState extends State<PaymentHistory> {
               color: Colors.black,
             ),
           ),
+        ),
+        body: Column(
+          children: [
+            // Tabs
+            Container(
+              color: Colors.white,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => isMyChitsOverview = true);
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context); // Go back to My Chits Overview
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 15.h),
+                        decoration: BoxDecoration(
+                          color: isMyChitsOverview ? const Color(0xFFE8F6ED) : Colors.white,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.transparent,
+                              width: 2.h,
+                            ),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: TrText(
+                          'My Chit Overview',
+                          style: TextStyle(
+                            color: isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.grey,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => isMyChitsOverview = false),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 15.h),
+                        decoration: BoxDecoration(
+                          color: !isMyChitsOverview ? const Color(0xFFE8F6ED) : Colors.white,
+                          border: Border(
+                            bottom: BorderSide(
+                              color: !isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.transparent,
+                              width: 2.h,
+                            ),
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: TrText(
+                          'Payment History',
+                          style: TextStyle(
+                            color: !isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.grey,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 15.h),
+
+            // Dynamic List
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF0C8A4B),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      color: const Color(0xFF0C8A4B),
+                      onRefresh: _fetchPaymentHistory,
+                      child: _payments.isEmpty
+                          ? ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: [
+                                SizedBox(height: 120.h),
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.receipt_long_outlined,
+                                        size: 50.sp,
+                                        color: Colors.grey.shade400,
+                                      ),
+                                      SizedBox(height: 10.h),
+                                      TrText(
+                                        'No payment history found',
+                                        style: TextStyle(
+                                          fontSize: 14.sp,
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            )
+                          : ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
+                              itemCount: _payments.length,
+                              itemBuilder: (context, index) {
+                                final payment = _payments[index];
+                                return _buildListItem(index, payment);
+                              },
+                            ),
+                    ),
+            ),
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          // Tabs
-          Container(
-            color: Colors.white,
+    );
+  }
+
+  Widget _buildListItem(int index, dynamic payment) {
+    final String currentMonth = payment['month_label']?.toString() ?? '';
+    final bool showMonthDivider = currentMonth.isNotEmpty &&
+        (index == 0 ||
+            _payments[index - 1]['month_label']?.toString() != currentMonth);
+
+    final chitIdVal = payment['chit_id']?.toString() ??
+        payment['chit_no']?.toString() ??
+        '';
+    final String chitId = 'Chit / $chitIdVal';
+
+    final groupName = payment['group_name']?.toString() ?? '';
+    final groupDetail = payment['group_detail']?.toString() ?? '';
+    String groupDisplay = 'Group Name / ';
+    if (groupName.isNotEmpty && groupDetail.isNotEmpty) {
+      groupDisplay += '$groupName / $groupDetail';
+    } else if (groupName.isNotEmpty) {
+      groupDisplay += groupName;
+    } else if (groupDetail.isNotEmpty) {
+      groupDisplay += groupDetail;
+    } else {
+      groupDisplay += '-';
+    }
+
+    final String dateDisplay =
+        (payment['datetime_display'] != null &&
+                payment['datetime_display'].toString().trim().isNotEmpty)
+            ? payment['datetime_display'].toString()
+            : '${payment['date'] ?? ''} ${payment['time'] ?? ''}'.trim();
+
+    final String status = payment['status']?.toString() ?? 'Approved';
+    final bool isPending = status.toLowerCase() == 'pending';
+
+    final String amountDisplay =
+        '₹${payment['amount_display'] ?? payment['amount'] ?? '0'}';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (showMonthDivider) ...[
+          if (index > 0) SizedBox(height: 15.h),
+          Center(
             child: Row(
               children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() => isMyChitsOverview = true);
-                      Navigator.pop(context); // Go back to My Chits Overview
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      decoration: BoxDecoration(
-                        color: isMyChitsOverview ? const Color(0xFFE8F6ED) : Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.transparent,
-                            width: 2.h,
-                          ),
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'My Chit Overview',
-                        style: TextStyle(
-                          color: isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.grey,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ),
+                Expanded(child: Divider(color: Colors.grey.shade300)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w),
+                  child: TrText(
+                    currentMonth,
+                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
                   ),
                 ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => isMyChitsOverview = false),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 15.h),
-                      decoration: BoxDecoration(
-                        color: !isMyChitsOverview ? const Color(0xFFE8F6ED) : Colors.white,
-                        border: Border(
-                          bottom: BorderSide(
-                            color: !isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.transparent,
-                            width: 2.h,
-                          ),
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Payment History',
-                        style: TextStyle(
-                          color: !isMyChitsOverview ? const Color(0xFF0C8A4B) : Colors.grey,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                Expanded(child: Divider(color: Colors.grey.shade300)),
               ],
             ),
           ),
           SizedBox(height: 15.h),
-
-          // List
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 5.h),
-              children: [
-                _buildHistoryCard(
-                  chitId: 'Chit / 1123',
-                  groupName: 'Group Name / L-10',
-                  date: '24 Aug 2026, 11:45 AM',
-                  status: 'Pending',
-                  amount: '₹4,12,500',
-                  isPending: true,
-                ),
-                SizedBox(height: 10.h),
-                _buildHistoryCard(
-                  chitId: 'Chit / 1123',
-                  groupName: 'Group Name / L-10',
-                  date: '24 Jul 2026, 10:45 AM',
-                  status: 'Pending',
-                  amount: '₹4,12,500',
-                  isPending: true,
-                ),
-                SizedBox(height: 15.h),
-                Center(
-                  child: Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10.w),
-                        child: Text('July 2026', style: TextStyle(color: Colors.grey, fontSize: 12.sp)),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey.shade300)),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 15.h),
-                _buildHistoryCard(
-                  chitId: 'Chit / 1123',
-                  groupName: 'Group Name / L-10',
-                  date: '24 Jun 2026, 9:45 AM',
-                  status: 'Approved',
-                  amount: '₹4,12,500',
-                  isPending: false,
-                ),
-                SizedBox(height: 10.h),
-                _buildHistoryCard(
-                  chitId: 'Chit / 1123',
-                  groupName: 'Group Name / L-10',
-                  date: '24 May 2026, 10:45 AM',
-                  status: 'Approved',
-                  amount: '₹4,12,500',
-                  isPending: false,
-                ),
-                SizedBox(height: 10.h),
-                _buildHistoryCard(
-                  chitId: 'Chit / 1123',
-                  groupName: 'Group Name / L-10',
-                  date: '24 Aug 2026, 11:45 AM',
-                  status: 'Approved',
-                  amount: '₹4,12,500',
-                  isPending: false,
-                ),
-                SizedBox(height: 10.h),
-                _buildHistoryCard(
-                  chitId: 'Chit / 1123',
-                  groupName: 'Group Name / L-10',
-                  date: '24 Aug 2026, 11:45 AM',
-                  status: 'Approved',
-                  amount: '₹4,12,500',
-                  isPending: false,
-                ),
-                SizedBox(height: 20.h),
-              ],
-            ),
-          ),
         ],
-      ),
-    ));
+        _buildHistoryCard(
+          payment: payment,
+          chitId: chitId,
+          groupName: groupDisplay,
+          date: dateDisplay,
+          status: status,
+          amount: amountDisplay,
+          isPending: isPending,
+        ),
+        SizedBox(height: 10.h),
+      ],
+    );
   }
 
   Widget _buildHistoryCard({
+    required dynamic payment,
     required String chitId,
     required String groupName,
     required String date,
@@ -223,9 +306,23 @@ class _PaymentHistoryState extends State<PaymentHistory> {
     return GestureDetector(
       onTap: () {
         if (isPending) {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const PendingHistoryScreen()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PendingHistoryScreen(),
+            ),
+          );
         } else {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const ApprovalHistoryScreen()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ApprovalHistoryScreen(
+                paymentData: payment is Map<String, dynamic>
+                    ? payment
+                    : Map<String, dynamic>.from(payment as Map),
+              ),
+            ),
+          );
         }
       },
       child: Container(
@@ -235,74 +332,117 @@ class _PaymentHistoryState extends State<PaymentHistory> {
           borderRadius: BorderRadius.circular(10.r),
           border: Border.all(color: Colors.grey.shade200),
         ),
-      child: Row(
-        children: [
-          Container(
-            width: 45.w,
-            height: 45.w,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8F6ED),
-              borderRadius: BorderRadius.circular(10.r),
+        child: Row(
+          children: [
+            Container(
+              width: 45.w,
+              height: 45.w,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F6ED),
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              child: Icon(
+                Icons.account_balance_wallet,
+                color: const Color(0xFF0C8A4B),
+                size: 20.sp,
+              ),
             ),
-            child: Icon(Icons.account_balance_wallet, color: const Color(0xFF0C8A4B), size: 20.sp),
-          ),
-          SizedBox(width: 15.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            SizedBox(width: 15.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    chitId,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    groupName,
+                    style: TextStyle(fontSize: 11.sp, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    date,
+                    style: TextStyle(fontSize: 11.sp, color: Colors.grey),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: 8.w),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(chitId, style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.bold, color: Colors.black87)),
-                SizedBox(height: 2.h),
-                Text(groupName, style: TextStyle(fontSize: 11.sp, color: Colors.grey)),
-                SizedBox(height: 2.h),
-                Text(date, style: TextStyle(fontSize: 11.sp, color: Colors.grey)),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: isPending ? Colors.orange.shade50 : Colors.white,
+                    border: Border.all(
+                      color: isPending
+                          ? Colors.orange.shade200
+                          : const Color(0xFF1B3C73),
+                    ),
+                    borderRadius: BorderRadius.circular(15.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isPending)
+                        Container(
+                          margin: EdgeInsets.only(right: 4.w),
+                          width: 6.w,
+                          height: 6.w,
+                          decoration: const BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                        )
+                      else
+                        Padding(
+                          padding: EdgeInsets.only(right: 4.w),
+                          child: Icon(
+                            Icons.check,
+                            color: const Color(0xFF1B3C73),
+                            size: 12.sp,
+                          ),
+                        ),
+                      TrText(
+                        status,
+                        style: TextStyle(
+                          color: isPending
+                              ? Colors.orange
+                              : const Color(0xFF1B3C73),
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  amount,
+                  style: TextStyle(
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0C8A4B),
+                  ),
+                ),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: isPending ? Colors.orange.shade50 : Colors.white,
-                  border: Border.all(color: isPending ? Colors.orange.shade200 : const Color(0xFF1B3C73)),
-                  borderRadius: BorderRadius.circular(15.r),
-                ),
-                child: Row(
-                  children: [
-                    if (isPending)
-                      Container(
-                        margin: EdgeInsets.only(right: 4.w),
-                        width: 6.w,
-                        height: 6.w,
-                        decoration: const BoxDecoration(
-                          color: Colors.orange,
-                          shape: BoxShape.circle,
-                        ),
-                      )
-                    else
-                      Padding(
-                        padding: EdgeInsets.only(right: 4.w),
-                        child: Icon(Icons.check, color: const Color(0xFF1B3C73), size: 12.sp),
-                      ),
-                    Text(
-                      status,
-                      style: TextStyle(
-                        color: isPending ? Colors.orange : const Color(0xFF1B3C73),
-                        fontSize: 10.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(amount, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold, color: const Color(0xFF0C8A4B))),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 }

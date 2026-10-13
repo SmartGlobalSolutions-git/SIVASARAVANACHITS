@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../services/prebid_api.dart';
 import '../Home_Sections/drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 const Color kScreenBg = Color(0xFFF7F7F7);
 const Color kSectionCardBg = Color(0xFFFFFFFF);
@@ -90,7 +91,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
+          content: TrText(
             response?['message']?.toString() ??
             response?['error_msg']?.toString() ??
             'Something went wrong',
@@ -140,7 +141,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
               }
             },
           ),
-        title: Text(
+        title: TrText(
           'Terms & Condition',
           style: TextStyle(
             fontFamily: 'Inter',
@@ -202,7 +203,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                   strokeWidth: 2,
                 ),
               )
-            : Text(
+            : TrText(
                 'Accept and Continue',
                 style: TextStyle(
                   fontFamily: 'Inter',
@@ -253,7 +254,7 @@ class _TermsSectionCard extends StatelessWidget {
               ),
               SizedBox(width: 8.w),
               Expanded(
-                child: Text(
+                child: TrText(
                   data.title,
                   style: TextStyle(
                     fontFamily: 'Inter',
@@ -270,7 +271,7 @@ class _TermsSectionCard extends StatelessWidget {
           ...data.paragraphs.map(
                 (p) => Padding(
               padding: EdgeInsets.only(bottom: 10.96.h),
-              child: Text(
+              child: TrText(
                 p,
                 style: TextStyle(
                   fontFamily: 'Inter',
@@ -309,7 +310,7 @@ class VerificationSuccessDialog extends StatelessWidget {
               height: 65.h,
             ),
             SizedBox(height: 5.h),
-            Text(
+            TrText(
               'Prebid Successful',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -334,7 +335,7 @@ class VerificationSuccessDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(5.98.r),
                   ),
                 ),
-                child: Text(
+                child: TrText(
                   'Continue',
                   style: TextStyle(
                     fontFamily: 'Inter',

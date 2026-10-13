@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/chit_enquiry_api.dart';
+import '../services/translation_service.dart';
 
 class ChitEnquirySheet extends StatefulWidget {
   const ChitEnquirySheet({super.key});
@@ -17,6 +18,17 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
   final TextEditingController _messageController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (TranslationService.isTamil) {
+      TranslationService.translate('Enter your Name');
+      TranslationService.translate('Enter mobile number');
+      TranslationService.translate('Enter mail ID');
+      TranslationService.translate('Tell us your requirement');
+    }
+  }
+
   Future<void> _submitEnquiry() async {
     final String name = _nameController.text.trim();
     final String mobile = _mobileController.text.trim();
@@ -25,7 +37,7 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
 
     if (name.isEmpty || mobile.isEmpty || message.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill Name, Mobile Number, and Message fields')),
+        const SnackBar(content: TrText('Please fill Name, Mobile Number, and Message fields')),
       );
       return;
     }
@@ -49,12 +61,12 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
 
     if (response['status'] == 'success') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response['message'] ?? 'Enquiry submitted successfully')),
+        SnackBar(content: TrText(response['message'] ?? 'Enquiry submitted successfully')),
       );
       Navigator.pop(context); // Close the dialog
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(response['message'] ?? 'Submission failed')),
+        SnackBar(content: TrText(response['message'] ?? 'Submission failed')),
       );
     }
   }
@@ -112,7 +124,7 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
               ),
             ),
             SizedBox(height: 16.h),
-            Text(
+            TrText(
               'Chit Enquiry',
               style: GoogleFonts.inter(
                 color: Colors.black,
@@ -121,7 +133,7 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
               ),
             ),
             SizedBox(height: 4.h),
-            Text(
+            TrText(
               'Find the right plan for you',
               style: GoogleFonts.inter(
                 color: Colors.grey[600],
@@ -149,6 +161,7 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEAB308), // Yellow/Gold color
                   foregroundColor: Colors.black,
+                  padding: EdgeInsets.symmetric(horizontal: 8.w),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -162,26 +175,30 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
                           color: Colors.black,
                         ),
                       )
-                    : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Submit Enquiry',
-                            style: GoogleFonts.inter(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w700,
+                    : FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TrText(
+                              'Submit Enquiry',
+                              style: GoogleFonts.inter(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(Icons.arrow_forward, size: 20.w),
-                        ],
+                            SizedBox(width: 8.w),
+                            Icon(Icons.arrow_forward, size: 20.w),
+                          ],
+                        ),
                       ),
               ),
             ),
             SizedBox(height: 16.h),
 
             // Terms text
-            Text(
+            TrText(
               'By submitting, you agree to be contacted by our team',
               style: GoogleFonts.inter(
                 color: Colors.grey[500],
@@ -199,7 +216,7 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TrText(
           label,
           style: GoogleFonts.inter(
             color: Colors.black,
@@ -214,7 +231,9 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
           keyboardType: keyboardType,
           style: GoogleFonts.inter(fontSize: 14.sp),
           decoration: InputDecoration(
-            hintText: hint,
+            hintText: TranslationService.isTamil
+                ? (TranslationService.getCachedTranslation(hint) ?? hint)
+                : hint,
             hintStyle: GoogleFonts.inter(color: Colors.grey[400]),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16.w,
@@ -238,3 +257,4 @@ class _ChitEnquirySheetState extends State<ChitEnquirySheet> {
     );
   }
 }
+

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_saravana/Screens/growth_plan/chatbot_screen.dart';
 import '../../constants/app_colors.dart';
+import '../../services/translation_service.dart';
 
 import 'package:siva_saravana/services/profile_view_api.dart';
 import '../../services/help_support_api.dart';
@@ -55,18 +56,17 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
           _userName = savedName;
         });
       }
-    } else {
-      final response = await ProfileViewApiService.fetchProfile();
-      if (mounted) {
-        setState(() {
-          if (response != null && response['error'] == false) {
-            _userName = response['profile']?['name']?.toString() ?? 'User';
-            SharedPrefsHelper.saveUserName(_userName);
-          } else {
-            _userName = 'User';
-          }
-        });
-      }
+    }
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted) {
+      setState(() {
+        if (response != null && response['error'] == false) {
+          _userName = response['profile']?['name']?.toString() ?? 'User';
+          SharedPrefsHelper.saveUserName(_userName);
+        } else if (_userName.isEmpty) {
+          _userName = 'User';
+        }
+      });
     }
   }
 
@@ -136,7 +136,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
               }
             },
           ),
-        title: Text(
+        title: TrText(
           'Need Help?',
           style: GoogleFonts.inter(
             color: Colors.black,
@@ -154,7 +154,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
           children: [
             SizedBox(height: 10.h),
             Text(
-              'Hi ${_userName.isEmpty ? 'Loading...' : _userName},',
+              'Hi ${_userName.isEmpty ? '...' : _userName},',
               style: GoogleFonts.inter(
                 fontSize: 24.sp,
                 fontWeight: FontWeight.w700,
@@ -162,7 +162,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
                 height: 1.2,
               ),
             ),
-            Text(
+            TrText(
               'How can we help ?',
               style: GoogleFonts.inter(
                 fontSize: 24.sp,
@@ -172,7 +172,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
               ),
             ),
             SizedBox(height: 16.h),
-            Text(
+            TrText(
               'Find your query in the FAQs',
               style: GoogleFonts.inter(
                 fontSize: 14.sp,
@@ -202,7 +202,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    TrText(
                       'Chat with us',
                       style: GoogleFonts.inter(
                         color: Colors.white,
@@ -219,7 +219,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
             
             SizedBox(height: 32.h),
             
-            Text(
+            TrText(
               'Contact us',
               style: GoogleFonts.inter(
                 fontSize: 16.sp,
@@ -299,7 +299,7 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
           size: 20.w,
         ),
       ),
-      title: Text(
+      title: TrText(
         title,
         style: GoogleFonts.inter(
           fontSize: 14.sp,

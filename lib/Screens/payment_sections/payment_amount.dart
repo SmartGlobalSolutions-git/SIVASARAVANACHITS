@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:siva_saravana/constants/app_colors.dart';
 import 'package:siva_saravana/widgets/chatbox_widget.dart';
+import '../../services/translation_service.dart';
 import 'review_pay.dart';
 
 import '../Home_Sections/drawers_screen.dart';
@@ -68,7 +69,7 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             'Payment',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -90,7 +91,7 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 10.h),
-                  Text(
+                  TrText(
                     'My Chits Overview',
                     style: TextStyle(
                       fontSize: 16.sp,
@@ -138,13 +139,26 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Pay Selected( 2 )',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TrText(
+                          'Pay Selected',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text(
+                          ' ( 2 )',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 10.h),
                     GestureDetector(
@@ -164,13 +178,26 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                           borderRadius: BorderRadius.circular(25.r),
                         ),
                         alignment: Alignment.center,
-                        child: Text(
-                          'Pay ₹ 25,000',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            TrText(
+                              'Pay',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              ' ₹ 25,000',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -195,9 +222,9 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Color(0xFFEFEFEF),
+        color: const Color(0xFFEFEFEF),
         borderRadius: BorderRadius.circular(15.r),
-        border: Border.all(color: Color(0x22018F46)),
+        border: Border.all(color: const Color(0x22018F46)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +234,7 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
             children: [
               Row(
                 children: [
-                  Text(
+                  TrText(
                     'Chit Amount',
                     style: TextStyle(color: Colors.grey, fontSize: 12.sp),
                   ),
@@ -218,10 +245,10 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                       vertical: 2.h,
                     ),
                     decoration: BoxDecoration(
-                      color: Color(0xFFD9AB07),
+                      color: const Color(0xFFD9AB07),
                       borderRadius: BorderRadius.circular(10.r),
                     ),
-                    child: Text(
+                    child: TrText(
                       'Running',
                       style: TextStyle(
                         color: Colors.white,
@@ -232,21 +259,22 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                   ),
                 ],
               ),
-              RichText(
-                text: TextSpan(
-                  text: 'Chit ID ',
-                  style: TextStyle(color: Colors.grey, fontSize: 12.sp, fontFamily: 'Inter'),
-                  children: [
-                    TextSpan(
-                      text: chitId,
-                      style: TextStyle(
-                        color: const Color(0xFF0C8A4B),
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TrText(
+                    'Chit ID ',
+                    style: TextStyle(color: Colors.grey, fontSize: 12.sp),
+                  ),
+                  Text(
+                    chitId,
+                    style: TextStyle(
+                      color: const Color(0xFF0C8A4B),
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -260,14 +288,14 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
             ),
           ),
           SizedBox(height: 10.h),
-          Divider(color: Color(0x66000000), height: 1, thickness: 0.3,),
+          const Divider(color: Color(0x66000000), height: 1, thickness: 0.3),
           SizedBox(height: 10.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              TrText(
                 'Due Amount',
-                style: TextStyle(color: Color(0x88000000), fontSize: 14.sp),
+                style: TextStyle(color: const Color(0x88000000), fontSize: 14.sp),
               ),
               Text(
                 '₹ $dueAmount',
@@ -283,9 +311,9 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              TrText(
                 'Enter Amount',
-                style: TextStyle(color: Color(0x88000000), fontSize: 14.sp),
+                style: TextStyle(color: const Color(0x88000000), fontSize: 14.sp),
               ),
               Container(
                 width: 120.w,
@@ -293,7 +321,7 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                 decoration: BoxDecoration(
                   border: Border.all(color: AppColors.primaryColor),
                   borderRadius: BorderRadius.circular(8.r),
-                  color: Colors.white
+                  color: Colors.white,
                 ),
                 alignment: Alignment.center,
                 child: Row(
@@ -335,11 +363,11 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
             ],
           ),
           SizedBox(height: 15.h),
-          Divider(color: Color(0x66000000), height: 1, thickness: 0.3,),
+          const Divider(color: Color(0x66000000), height: 1, thickness: 0.3),
           SizedBox(height: 10.h),
-          Text(
+          TrText(
             'Quick Action',
-            style: TextStyle(color: Color(0x88000000), fontSize: 14.sp),
+            style: TextStyle(color: const Color(0x88000000), fontSize: 14.sp),
           ),
           SizedBox(height: 10.h),
           Row(
@@ -359,7 +387,7 @@ class _PaymentAmountScreenState extends State<PaymentAmountScreen> {
                     vertical: 8.h,
                   ),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Color(0xFFA7A7A7)),
+                    border: Border.all(color: const Color(0xFFA7A7A7)),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(

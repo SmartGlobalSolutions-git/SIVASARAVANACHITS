@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
-
 import '../../services/profile_view_api.dart';
 import '../../services/shared_prefs_helper.dart';
+import '../../services/translation_service.dart';
 
 import '../Home_Sections/drawers_screen.dart';
 
@@ -121,7 +121,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           },
                         ),
                         SizedBox(width: 4.w),
-                        Text(
+                        TrText(
                           'Profile',
                           style: GoogleFonts.inter(
                             fontSize: 15.sp,
@@ -144,7 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     SizedBox(
                       height: 300.h,
                       child: Center(
-                        child: Text(
+                        child: TrText(
                           _errorMessage!,
                           style: TextStyle(color: Colors.red),
                         ),
@@ -206,19 +206,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                 // Customer Code (Inter, #000000)
                                 Center(
-                                  child: Text(
-                                    'Customer ID : ${_profileData?['cus_id']?.toString() ?? 'N/A'}',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.profilePhoneAndCode,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TrText(
+                                        'Customer ID : ',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.profilePhoneAndCode,
+                                        ),
+                                      ),
+                                      Text(
+                                        _profileData?['cus_id']?.toString() ?? 'N/A',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.profilePhoneAndCode,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 SizedBox(height: 28.h),
 
                                 // Section Heading: "Personal information" (Inter)
-                                Text(
+                                TrText(
                                   'Personal information',
                                   style: GoogleFonts.inter(
                                     fontSize: 16.sp,
@@ -226,7 +239,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     color: AppColors.profileItemTitle,
                                   ),
                                 ),
-                                SizedBox(height: 14),
+                                const SizedBox(height: 14),
 
                                 // Details Card (Manrope font)
                                 _buildPersonalInformationCard(),
@@ -293,8 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: BoxDecoration(
         color: AppColors.profileCardBackground,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Color(0xFFF3F4F6), width: 0.93.w),
-        
+        border: Border.all(color: const Color(0xFFF3F4F6), width: 0.93.w),
       ),
       child: Column(
         children: [
@@ -372,7 +384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                TrText(
                   title,
                   style: GoogleFonts.manrope(
                     fontSize: 14.sp,

@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import '../../services/profile_view_api.dart';
 import '../../services/shared_prefs_helper.dart';
 import 'drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 class MyChitDetailScreen extends StatefulWidget {
   final dynamic chitItem;
@@ -29,6 +30,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
   String _userName = '';
   Timer? _auctionTimer;
   Duration _timeLeft = Duration.zero;
+  DateTime? _targetAuctionDate;
 
   @override
   void initState() {
@@ -43,38 +45,50 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
     super.dispose();
   }
 
-  void _startAuctionTimer() {
-    String dateStr = widget.chitItem['Auction Date']?.toString() ?? '';
-    String timeStr = widget.chitItem['Auction Time']?.toString() ?? '';
+  DateTime? _parseAuctionDateTime() {
+    String dateStr = widget.chitItem['Auction Date']?.toString().trim() ?? '';
+    String timeStr = widget.chitItem['Auction Time']?.toString().trim() ?? '';
 
-    if (dateStr.isEmpty || dateStr == '0') return;
+    if (dateStr.isEmpty || dateStr == '0') return null;
 
-    DateTime? targetDate;
-    try {
-      if (timeStr.isNotEmpty) {
-        // Simple heuristic: check if timeStr is e.g. "10:30 AM" or "14:30"
-        // Try parsing concatenated string first
-        try {
-          targetDate = DateTime.parse('$dateStr $timeStr');
-        } catch (e) {
-          // If parsing fails, just use the date
-          targetDate = DateTime.parse(dateStr);
-        }
-      } else {
-        targetDate = DateTime.parse(dateStr);
-      }
-    } catch (e) {
-      return;
+    if (timeStr.isNotEmpty) {
+      try {
+        return DateFormat('yyyy-MM-dd hh:mm a').parse('$dateStr $timeStr');
+      } catch (_) {}
+      try {
+        return DateFormat('yyyy-MM-dd h:mm a').parse('$dateStr $timeStr');
+      } catch (_) {}
+      try {
+        return DateFormat('yyyy-MM-dd hh:mm:ss a').parse('$dateStr $timeStr');
+      } catch (_) {}
+      try {
+        return DateFormat('yyyy-MM-dd HH:mm:ss').parse('$dateStr $timeStr');
+      } catch (_) {}
+      try {
+        return DateFormat('yyyy-MM-dd HH:mm').parse('$dateStr $timeStr');
+      } catch (_) {}
+      try {
+        return DateTime.parse('$dateStr $timeStr');
+      } catch (_) {}
     }
+    try {
+      return DateTime.parse(dateStr);
+    } catch (_) {
+      return null;
+    }
+  }
 
-    if (targetDate != null) {
-      _updateTimeLeft(targetDate);
+  void _startAuctionTimer() {
+    _targetAuctionDate = _parseAuctionDateTime();
+
+    if (_targetAuctionDate != null) {
+      _updateTimeLeft(_targetAuctionDate!);
       _auctionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
         if (!mounted) {
           timer.cancel();
           return;
         }
-        _updateTimeLeft(targetDate!);
+        _updateTimeLeft(_targetAuctionDate!);
       });
     }
   }
@@ -93,6 +107,85 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
     }
   }
 
+  double get _runningBalance {
+    final raw = widget.chitItem['Running Balance'] ?? widget.chitItem['cur_run_bal'];
+    if (raw == null) return 0.0;
+    return double.tryParse(raw.toString()) ?? 0.0;
+  }
+
+  bool get _isAuctionClosed {
+    if (_targetAuctionDate == null) return true;
+    final now = DateTime.now();
+    final closeTime = _targetAuctionDate!.subtract(const Duration(hours: 2));
+    return now.isAfter(closeTime) || _timeLeft <= const Duration(hours: 2);
+  }
+
+  bool get _isPrebidAllowed {
+    final bool rawAllowed = widget.chitItem['Prebid Allowed'] == null
+        ? true
+        : (widget.chitItem['Prebid Allowed'] == true ||
+            widget.chitItem['Prebid Allowed'].toString().toLowerCase() == 'true');
+    if (_runningBalance > 100 || !rawAllowed) return false;
+    if (_isAuctionClosed) return false;
+    return true;
+  }
+
+  void _onPrebidTap() {
+    final double runBal = _runningBalance;
+    final bool rawAllowed = widget.chitItem['Prebid Allowed'] == null
+        ? true
+        : (widget.chitItem['Prebid Allowed'] == true ||
+            widget.chitItem['Prebid Allowed'].toString().toLowerCase() == 'true');
+
+    if (runBal > 100 || !rawAllowed) {
+      final String message = (widget.chitItem['Prebid Message']?.toString().trim().isNotEmpty ?? false)
+          ? widget.chitItem['Prebid Message'].toString().trim()
+          : 'Running balance exceeds 100. Pre-bidding cannot be done.';
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: TrText(
+            message,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return;
+    }
+
+    if (_isAuctionClosed) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: TrText(
+            'Pre-bid auction is closed. Pre-bidding closes 2 hours before the auction.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PrebiddingDetailScreen(
+          groupName: widget.chitItem['Group Name']?.toString() ?? '',
+          groupCode: widget.chitItem['Chit_id']?.toString() ?? '',
+          auctionDateTime: _targetAuctionDate ??
+              DateTime.now().add(const Duration(days: 1)),
+          lastAuctionAmount: runBal,
+          chitId: widget.chitItem['Chit_id']?.toString() ?? '',
+          grpId: widget.chitItem['group_id']?.toString() ?? '',
+        ),
+      ),
+    );
+  }
+
   Future<void> _fetchProfileName() async {
     final savedName = await SharedPrefsHelper.getUserName();
     if (savedName.isNotEmpty) {
@@ -101,16 +194,15 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           _userName = savedName;
         });
       }
-    } else {
-      final response = await ProfileViewApiService.fetchProfile();
-      if (mounted && response != null && response['error'] == false) {
-        final profile = response['profile'];
-        if (profile != null && profile['name'] != null) {
-          setState(() {
-            _userName = profile['name'];
-          });
-          SharedPrefsHelper.saveUserName(profile['name']);
-        }
+    }
+    final response = await ProfileViewApiService.fetchProfile();
+    if (mounted && response != null && response['error'] == false) {
+      final profile = response['profile'];
+      if (profile != null && profile['name'] != null) {
+        setState(() {
+          _userName = profile['name'];
+        });
+        SharedPrefsHelper.saveUserName(profile['name']);
       }
     }
   }
@@ -179,7 +271,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             },
           ),
           titleSpacing: 0,
-        title: Text(
+        title: TrText(
           'Chits detail',
           style: TextStyle(
             fontSize: 16.sp,
@@ -210,7 +302,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(
                       color: AppColors.primaryColor,
@@ -308,6 +400,8 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                         children: [
                           Text(
                             "$_userName - ${widget.chitItem['Chit_id']?.toString() ?? ''}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 13.sp,
@@ -315,24 +409,29 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                             ),
                           ),
                           SizedBox(height: 2.h),
-                          Row(
-                            children: [
-                              Text(
-                                'GROUP CODE ',
-                                style: TextStyle(
-                                  color: Color(0xFF475569),
-                                  fontSize: 12.sp,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TrText(
+                                  'GROUP CODE ',
+                                  style: TextStyle(
+                                    color: Color(0xFF475569),
+                                    fontSize: 11.sp,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                widget.chitItem['Group Name']?.toString() ?? '',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14.sp,
-                                  color: Colors.black,
+                                Text(
+                                  widget.chitItem['Group Name']?.toString() ?? '',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13.sp,
+                                    color: Colors.black,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -358,7 +457,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                             ),
                           ),
                           SizedBox(width: 4.w),
-                          Text(
+                          TrText(
                             widget.chitItem['Chit Status']?.toString() ??
                                 '',
                             style: TextStyle(
@@ -376,71 +475,91 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Chit Value',
-                          style: TextStyle(
-                            color: Color(0xFF475569),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrText(
+                            'Chit Value',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '₹ ${_formatAmount(widget.chitItem['Chit Value'])}',
-                          style: TextStyle(
-                            color: AppColors.primaryColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14.sp,
+                          SizedBox(height: 4.h),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              '₹ ${_formatAmount(widget.chitItem['Chit Value'])}',
+                              style: TextStyle(
+                                color: AppColors.primaryColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13.sp,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Start Date',
-                          style: TextStyle(
-                            color: Color(0xFF475569),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrText(
+                            'Start Date',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _formatDate(widget.chitItem['Start Date']),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                            color: Color(0xFF1E293B),
+                          SizedBox(height: 4.h),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _formatDate(widget.chitItem['Start Date']),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.sp,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'End Date',
-                          style: TextStyle(
-                            color: Color(0xFF475569),
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
+                    SizedBox(width: 4.w),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TrText(
+                            'End Date',
+                            style: TextStyle(
+                              color: Color(0xFF475569),
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _formatDate(widget.chitItem['End Date']),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14.sp,
-                            color: Color(0xFF1E293B),
+                          SizedBox(height: 4.h),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _formatDate(widget.chitItem['End Date']),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.sp,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -466,7 +585,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                   height: 24.h,
                 ),
                 SizedBox(width: 12.w),
-                Text(
+                TrText(
                   'TOTAL DIVIDEND',
                   style: TextStyle(
                     color: const Color(0xFF022C22),
@@ -510,7 +629,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             height: 28.h,
           ),
           SizedBox(width: 12.w),
-          Text(
+          TrText(
             'RUNNING BALANCE',
             style: TextStyle(
               color: Color(0xFF022C22),
@@ -520,7 +639,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           ),
           SizedBox(width: 10.w),
           Text(
-            '₹ ${_formatAmount(widget.chitItem['Running Balance'])}',
+            '₹ ${_formatAmount(widget.chitItem['Running Balance'] ?? widget.chitItem['cur_run_bal'])}',
             style: TextStyle(
               color: const Color(0xFF003E21), // Dark green
               fontWeight: FontWeight.w700,
@@ -571,7 +690,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              TrText(
                 'Chit Duration',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
@@ -579,26 +698,27 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                   color: Color(0xFF1E293B),
                 ),
               ),
-              RichText(
-                text: TextSpan(
-                  text: '${paidDue.toInt()}',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16.sp,
-                    color: Color(0xFF1E293B),
-                  ),
-                  children: [
-                    TextSpan(
-                      text: ' / ${noIns.toInt()} Months',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12.sp,
-                        color: Color(0xFF94A3B8),
-                      ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${paidDue.toInt()} / ${noIns.toInt()} ',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16.sp,
+                      color: Color(0xFF1E293B),
                     ),
-                  ],
-                ),
+                  ),
+                  TrText(
+                    'Months',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12.sp,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -738,7 +858,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                             ),
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ],
@@ -753,13 +873,26 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                 children: [
                   Icon(Icons.circle, color: Color(0xFF059669), size: 13.sp),
                   SizedBox(width: 8.w),
-                  Text(
-                    'Completed: ${paidDue.toInt()}',
-                    style: TextStyle(
-                      color: Color(0xFF475569),
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TrText(
+                        'Completed',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        ': ${paidDue.toInt()}',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -767,13 +900,26 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                 children: [
                   Icon(Icons.circle, color: Color(0xFFCBD5E1), size: 13.sp),
                   SizedBox(width: 8.w),
-                  Text(
-                    'Remaining: $remaining',
-                    style: TextStyle(
-                      color: Color(0xFF475569),
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TrText(
+                        'Remaining',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        ': $remaining',
+                        style: TextStyle(
+                          color: Color(0xFF475569),
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -816,12 +962,20 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Chit Statement',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: TrText(
+                            'Chit Statement',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                       Icon(
@@ -867,12 +1021,20 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Passbook',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: TrText(
+                            'Passbook',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                       Icon(
@@ -895,7 +1057,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TrText(
           'Prebidding',
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -907,7 +1069,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
         // Time Left Banner
         Container(
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 10.w),
           decoration: BoxDecoration(
             color: const Color(0xB2E2CEF6), // Light purple
             borderRadius: BorderRadius.circular(8.r),
@@ -915,47 +1077,77 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           ),
           child: Row(
             children: [
-              Image.asset(
-                'assets/home_images/clock.png',
-                width: 30.w,
-                height: 30.w,
-              ),
-              SizedBox(width: 12.w),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Time Left',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.sp,
-                      color: Color(0xFF111827),
+              Expanded(
+                flex: 5,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/home_images/clock.png',
+                      width: 26.w,
+                      height: 26.w,
                     ),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TrText(
+                            'Time Left',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          TrText(
+                            'Auction Countdown',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 9.sp,
+                              color: Color(0xFF505255),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                flex: 6,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildCountdownBlock(_timeLeft.inDays.toString().padLeft(2, '0'), 'Days'),
+                      Text(
+                        ':',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      ),
+                      _buildCountdownBlock((_timeLeft.inHours % 24).toString().padLeft(2, '0'), 'Hours'),
+                      Text(
+                        ':',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      ),
+                      _buildCountdownBlock((_timeLeft.inMinutes % 60).toString().padLeft(2, '0'), 'Minutes'),
+                      Text(
+                        ':',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
+                      ),
+                      _buildCountdownBlock((_timeLeft.inSeconds % 60).toString().padLeft(2, '0'), 'Seconds'),
+                    ],
                   ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    'Auction Countdown',
-                    style: TextStyle(fontSize: 10.sp, color: Color(0xFF505255)),
-                  ),
-                ],
+                ),
               ),
-              const Spacer(),
-              _buildCountdownBlock(_timeLeft.inDays.toString().padLeft(2, '0'), 'Days'),
-              Text(
-                ':',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
-              ),
-              _buildCountdownBlock((_timeLeft.inHours % 24).toString().padLeft(2, '0'), 'Hours'),
-              Text(
-                ':',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
-              ),
-              _buildCountdownBlock((_timeLeft.inMinutes % 60).toString().padLeft(2, '0'), 'Minutes'),
-              Text(
-                ':',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.sp),
-              ),
-              _buildCountdownBlock((_timeLeft.inSeconds % 60).toString().padLeft(2, '0'), 'Seconds'),
             ],
           ),
         ),
@@ -979,7 +1171,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                     height: 25.w,
                   ),
                   SizedBox(width: 10.w),
-                  Text(
+                  TrText(
                     'Auction Details',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
@@ -993,70 +1185,87 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Auction Date',
-                        style: TextStyle(
-                          color: Color(0xFF505255),
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TrText(
+                          'Auction Date',
+                          style: TextStyle(
+                            color: Color(0xFF505255),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        _formatDate(widget.chitItem['Auction Date']),
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
+                        SizedBox(height: 4.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            _formatDate(widget.chitItem['Auction Date']),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Container(width: 1, height: 30.h, color: Color(0xFFCDD2DA)),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Auction No.',
-                        style: TextStyle(
-                          color: Color(0xFF505255),
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        TrText(
+                          'Auction No.',
+                          style: TextStyle(
+                            color: Color(0xFF505255),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        widget.chitItem['Auction No']?.toString() ?? '',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
+                        SizedBox(height: 4.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            widget.chitItem['Auction No']?.toString() ?? '',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Container(width: 1, height: 30.h, color: Color(0xFFCDD2DA)),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Auction Time',
-                        style: TextStyle(
-                          color: Color(0xFF505255),
-                          fontSize: 10.sp,
-                          fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        TrText(
+                          'Auction Time',
+                          style: TextStyle(
+                            color: Color(0xFF505255),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        widget.chitItem['Auction Time']?.toString() ?? '',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
+                        SizedBox(height: 4.h),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            widget.chitItem['Auction Time']?.toString() ?? '',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12.sp,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -1091,7 +1300,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                       height: 50.w,
                     ),
                     SizedBox(height: 6.h),
-                    Text(
+                    TrText(
                       'Previous Auction Detail',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -1147,7 +1356,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                Text(
+                                TrText(
                                   'Auction Date',
                                   style: TextStyle(
                                     color: Color(0xFF505255),
@@ -1175,7 +1384,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                Text(
+                                TrText(
                                   'Bid Amount',
                                   style: TextStyle(
                                     color: Color(0xFF505255),
@@ -1203,7 +1412,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                Text(
+                                TrText(
                                   'Prized Amount',
                                   style: TextStyle(
                                     color: Color(0xFF505255),
@@ -1234,7 +1443,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
         ),
         SizedBox(height: 10.h),
         Center(
-          child: Text(
+          child: TrText(
             'Pre-Bidding closes 2 hours before the auction',
             style: TextStyle(
               color: Color(0xFFDA5353),
@@ -1249,23 +1458,11 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
           width: double.infinity,
           height: 40.h,
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => PrebiddingDetailScreen(
-                    groupName: widget.chitItem['Group Name']?.toString() ?? '',
-                    groupCode: widget.chitItem['Chit_id']?.toString() ?? '',
-                    auctionDateTime: DateTime.now().add(const Duration(days: 1)),
-                    lastAuctionAmount: double.tryParse(widget.chitItem['Prev Bid Amount']?.toString() ?? '0') ?? 0.0,
-                    chitId: widget.chitItem['Chit_id']?.toString() ?? '',
-                    grpId: widget.chitItem['group_id']?.toString() ?? '',
-                  ),
-                ),
-              );
-            },
+            onPressed: _onPrebidTap,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
+              backgroundColor: _isPrebidAllowed
+                  ? AppColors.primaryColor
+                  : AppColors.primaryColor.withValues(alpha: 0.5),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.r),
               ),
@@ -1274,7 +1471,7 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                TrText(
                   'Prebid',
                   style: TextStyle(
                     color: Colors.white,
@@ -1294,12 +1491,12 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
 
   Widget _buildCountdownBlock(String value, String label) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4.w),
+      padding: EdgeInsets.symmetric(horizontal: 2.w),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: EdgeInsets.all(4.w),
+            padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 3.h),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(4.r),
@@ -1308,15 +1505,18 @@ class _MyChitDetailScreenState extends State<MyChitDetailScreen> {
               value,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 14.sp,
+                fontSize: 13.sp,
                 color: Colors.black,
               ),
             ),
           ),
           SizedBox(height: 2.h),
-          Text(
-            label,
-            style: TextStyle(fontSize: 8.sp, color: Colors.grey.shade700),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: TrText(
+              label,
+              style: TextStyle(fontSize: 8.sp, color: Colors.grey.shade700),
+            ),
           ),
         ],
       ),

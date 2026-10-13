@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/privacy_policy_api.dart';
+import '../../services/translation_service.dart';
 import 'app_colors.dart';
 
 import '../Home_Sections/drawers_screen.dart';
@@ -96,7 +97,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
               }
             },
           ),
-          title: Text(
+          title: TrText(
             _policyData?['title'] ?? 'Privacy Policy',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -117,7 +118,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _policyData == null
-                ? const Center(child: Text('Failed to load privacy policy'))
+                ? const Center(child: TrText('Failed to load privacy policy'))
                 : ScrollConfiguration(
                     behavior: ScrollConfiguration.of(context).copyWith(
                       overscroll: false,
@@ -131,7 +132,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (_policyData?['published'] != null)
-                              Text(
+                              TrText(
                                 _policyData!['published'].toString(),
                                 style: bodyStyle,
                               ),
@@ -139,7 +140,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
                               SizedBox(height: 14.h),
                             
                             if (_policyData?['intro'] != null)
-                              Text(
+                              TrText(
                                 _policyData!['intro'].toString(),
                                 style: bodyStyle,
                               ),
@@ -180,13 +181,13 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (title.isNotEmpty)
-            Text(
+            TrText(
               title,
               style: titleStyle,
             ),
           if (title.isNotEmpty) SizedBox(height: 2.h),
           if (content.isNotEmpty)
-            Text(
+            TrText(
               content,
               style: bodyStyle,
             ),

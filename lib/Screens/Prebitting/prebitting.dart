@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../services/prebid_api.dart';
 import '../../services/profile_view_api.dart';
 import '../Home_Sections/drawers_screen.dart';
+import '../../services/translation_service.dart';
 
 const Color kScreenBg = Color(0xFFF3F3F5);
 const Color kCardBorderColor = Color(0xFFA7F3D0);
@@ -24,6 +25,8 @@ const Color kNeedHelpBorderColor = Color(0xFF9B9B9B);
 const Color kNeedHelpTextColor = Color(0xFF018F46);
 const Color kPrebidGradientStart = Color(0xFFE2B721);
 const Color kPrebidGradientEnd = Color(0xFFC39F1E);
+const Color kPrebidDisabledGradientStart = Color.fromRGBO(226, 183, 33, 0.5);
+const Color kPrebidDisabledGradientEnd = Color.fromRGBO(195, 159, 30, 0.5);
 
 class PrebiddingListScreen extends StatefulWidget {
   final VoidCallback? onBackTap;
@@ -95,7 +98,7 @@ class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _items.isEmpty
-            ? const Center(child: Text("No prebid items found."))
+            ? const Center(child: TrText("No prebid items found."))
             : ListView.separated(
               padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 24.h),
               itemCount: _items.length,
@@ -124,7 +127,7 @@ class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
           }
         },
       ),
-      title: Text(
+      title: TrText(
         'Prebidding',
         style: TextStyle(
           fontFamily: 'Inter',
@@ -160,7 +163,7 @@ class _PrebiddingListScreenState extends State<PrebiddingListScreen> {
                     height: 16.h,
                   ),
                   SizedBox(width: 4.w),
-                  Text(
+                  TrText(
                     'Need Help ?',
                     style: TextStyle(
                       color: AppColors.primaryColor,
@@ -239,6 +242,18 @@ class PrebidCard extends StatelessWidget {
         double.tryParse(item['Running Balance']?.toString() ?? '0') ?? 0.0;
     bool isPrized = item['Status']?.toString().toLowerCase() == 'prized';
 
+    final dynamic rawAllowed = item['Prebid Allowed'] ?? item['prebid_allowed'];
+    final bool isPrebidAllowed = rawAllowed == null
+        ? true
+        : (rawAllowed == true ||
+            rawAllowed.toString().toLowerCase() == 'true' ||
+            rawAllowed.toString() == '1');
+    final String prebidMessage = (item['Prebid Message']?.toString().trim().isNotEmpty ?? false)
+        ? item['Prebid Message'].toString().trim()
+        : (item['prebid_message']?.toString().trim().isNotEmpty ?? false)
+            ? item['prebid_message'].toString().trim()
+            : 'Pre-bidding cannot be done.';
+
     return Container(
       width: 328,
       padding: EdgeInsets.fromLTRB(17.w, 10.h, 13.w, 15.h),
@@ -268,28 +283,33 @@ class PrebidCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 2.h),
-          Row(
-            children: [
-              Text(
-                'GROUP CODE',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 11.sp,
-                  color: kGroupLabelColor,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TrText(
+                  'GROUP CODE',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11.sp,
+                    color: kGroupLabelColor,
+                  ),
                 ),
-              ),
-              SizedBox(width: 8.w),
-              Text(
-                groupCode,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16.sp,
-                  color: kGroupValueColor,
+                SizedBox(width: 8.w),
+                Text(
+                  groupCode,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16.sp,
+                    color: kGroupValueColor,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           SizedBox(height: 4.h),
           Container(
@@ -317,6 +337,21 @@ class PrebidCard extends StatelessWidget {
                 Center(
                   child: GestureDetector(
                     onTap: () {
+                      if (!isPrebidAllowed) {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: TrText(
+                              prebidMessage,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.black,
+                            behavior: SnackBarBehavior.fixed,
+                          ),
+                        );
+                        return;
+                      }
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -334,24 +369,32 @@ class PrebidCard extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      width: 86.w,
+                      padding: EdgeInsets.symmetric(horizontal: 10.w),
                       height: 23.h,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(26.92.r),
-                        gradient: const LinearGradient(
-                          colors: [kPrebidGradientStart, kPrebidGradientEnd],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
+                        gradient: LinearGradient(
+                          colors: isPrebidAllowed
+                              ? const [kPrebidGradientStart, kPrebidGradientEnd]
+                              : const [
+                                  kPrebidDisabledGradientStart,
+                                  kPrebidDisabledGradientEnd,
+                                ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
                       ),
-                      child: Text(
-                        'Prebid',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12.sp,
-                          color: Colors.white,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: TrText(
+                          'Prebid',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12.sp,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -397,7 +440,7 @@ class _StatusBadge extends StatelessWidget {
             ),
           ),
           SizedBox(width: 5.32.w),
-          Text(
+          TrText(
             isPrized ? 'Prized' : 'Unprized',
             style: TextStyle(
               fontFamily: 'Inter',
@@ -432,10 +475,10 @@ class _InfoRow extends StatelessWidget {
     return Row(
       children: [
         Image.asset(iconAsset, width: 22.sp, height: 22.sp),
-        SizedBox(width: 12.w),
-        SizedBox(
-          width: 130.w,
-          child: Text(
+        SizedBox(width: 10.w),
+        Flexible(
+          flex: 4,
+          child: TrText(
             label,
             style: TextStyle(
               fontFamily: 'Inter',
@@ -445,7 +488,9 @@ class _InfoRow extends StatelessWidget {
             ),
           ),
         ),
-        Expanded(
+        SizedBox(width: 8.w),
+        Flexible(
+          flex: 5,
           child: Text(
             value,
             textAlign: TextAlign.left,
